@@ -1,20 +1,14 @@
+import 'package:dineswift_management/features/dashboard/screens/dashboard.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 class DineSwiftApp extends StatelessWidget {
   const DineSwiftApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'DineSwift App',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      home: const Scaffold(
-        body: Center(
-          child: Text('Welcome to DineSwift!'),
-        ),
-      ),
+    return GetMaterialApp(
+      home: const DineSwiftDashboard(),
     );
   }
 }

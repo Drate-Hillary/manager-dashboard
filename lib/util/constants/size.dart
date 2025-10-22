@@ -2,6 +2,7 @@ class DineSwiftSize{
   // Padding and Margin
   static const double xs = 4.0;
   static const double sm = 8.0;
+  static const double smd = 13.0;
   static const double md = 16.0;
   static const double lg = 24.0;
   static const double xl = 32.0;
@@ -13,6 +14,7 @@ class DineSwiftSize{
   static const double iconLg = 32.0;
 
   //  font sizes
+  static const double fontSizeSm = 12.0;
   static const double fontSizeXs = 14.0;
   static const double fontSizeMd = 16.0;
   static const double fontSizeLg = 18.0;
@@ -33,6 +35,13 @@ class DineSwiftSize{
   static const double defaultSpace = 24.0;
   static const double spaceBtwItems = 16.0;
   static const double spaceBtwSections = 32.0;
+  static const double spaceBtwCards = 20.0;
+  static const double spaceBtwRows = 12.0;
+  static const double spaceBtwColumns = 12.0;
+  static const double spaceBtwIcons = 8.0;
+  static const double spaceBtwTextAndIcon = 8.0;
+  static const double spaceBtwTextAndIconAndButton = 8.0;
+  static const double spaceBtwTextAndButton = 8.0;
 
   // Border Radius
   static const double borderRadiusSm = 4.0;

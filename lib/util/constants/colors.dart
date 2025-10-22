@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 class DineSwiftColors {
   DineSwiftColors._();
 
-  static const Gradient primaryGradient = LinearGradient(
+  static const Gradient linearGradient = LinearGradient(
     begin: Alignment.centerLeft,
     end: Alignment.centerRight,
     colors: [
@@ -17,9 +17,10 @@ class DineSwiftColors {
 
   static const Color primaryColor = Color(0xffc34c16);
   static const Color secondaryColor = Color(0xffee9c77);
-  static const Color backgroundColor = Color(0xfffff1eb);
+  static const Color lightSecondaryColor = Color.fromARGB(255, 255, 244, 236);
+  static const Color backgroundColor = Color(0xFFFFF1EB);
   static const Color iconColor = Color(0xff9b3f15);
-  static const Color textColor = Color(0xff9b3f15);
+  static const Color textColor = Color.fromARGB(255, 137, 56, 18);
 
   //error and validation colors
   static const Color errorColor = Color(0xffd32f2f);
@@ -34,6 +35,4 @@ class DineSwiftColors {
   static const Color lightGrey = Color(0xffe0e0e0);
   static const Color darkerGrey = Color(0xff4f4f4f);
   static const Color darkGrey = Color(0xff939393);
-
-
 }

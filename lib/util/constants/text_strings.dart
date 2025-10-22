@@ -3,6 +3,16 @@ class DineSwiftTextStrings {
   // splash screen texts
   static const String appName = "DineSwift";
 
+  //sidebar texts
+  static const String dashboard = "Dashboard";
+  static const String inventoryAndSupplies = "Inventory & Supplies";
+  static const String operationsAndDispatch = "Operations & Dispatch";
+  static const String loyaltyProgram = "Loyalty Program";
+  static const String customerCommunication = "Customer Communication";
+  static const String analyticsAndReports = "Analytics & Reports";
+  static const String systemConfiguration = "System Configuration";
+
+
   // onboarding texts
   static const String onboardingTitle1 = "Scan & Select Your Food";
   static const String onboardingTitle2 = "Secure & Easy Payment";

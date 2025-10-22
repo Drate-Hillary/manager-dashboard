@@ -25,7 +25,7 @@ class AppTheme {
     scaffoldBackgroundColor: Colors.white,
     primaryColor: Colors.blue,
     textTheme: CustomTextTheme.dineSwiftTextTheme,
-    appBarTheme: CustomAppbarTheme.DineSwiftAppBarTheme,
+    appBarTheme: CustomAppbarTheme.dineSwiftAppBarTheme,
     checkboxTheme: CustomCheckBoxTheme.dineSwiftCheckBoxTheme,
   );
 }
