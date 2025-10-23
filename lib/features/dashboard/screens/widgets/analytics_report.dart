@@ -5,8 +5,10 @@ class AnalyticsReport extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
-      child: Text('Analytics & Report Screen'),
+    return Center(
+      child: Text(
+        'Analytics Report Screen',
+      ),
     );
   }
 }

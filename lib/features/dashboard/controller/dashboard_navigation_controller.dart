@@ -24,7 +24,7 @@ class DashboardNavigationController extends ChangeNotifier {
     3: const LoyaltyProgram(),
     4: const CustomerCommunication(),
     5: const AnalyticsReport(),
-    6: const SystemConfiguration(),
+    6: SystemConfiguration(),
   };
 
   void selectScreen(int index) {
