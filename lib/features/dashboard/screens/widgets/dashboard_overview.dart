@@ -19,7 +19,7 @@ class DashboardOverview extends StatelessWidget {
             Row( 
               // Wrap the icon and text in a Row
               children: [
-                Icon(Iconsax.home, size: 32.0, color: DineSwiftColors.iconColor),
+                Icon(Iconsax.home, size: DineSwiftSize.iconLg, color: DineSwiftColors.iconColor),
                 const SizedBox(width: DineSwiftSize.spaceBtwItems),
                 Text(
                   'Daily Overview',

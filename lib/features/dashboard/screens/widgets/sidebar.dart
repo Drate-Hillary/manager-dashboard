@@ -1,4 +1,5 @@
 import 'package:dineswift_management/features/dashboard/controller/dashboard_navigation_controller.dart';
+import 'package:dineswift_management/util/constants/image_string.dart';
 import 'package:dineswift_management/util/constants/text_strings.dart';
 import 'package:flutter/material.dart';
 import 'package:dineswift_management/util/constants/size.dart';
@@ -191,9 +192,8 @@ class _AppSidebarState extends State<AppSidebar> {
             const Divider(color: DineSwiftColors.primaryColor),
 
             ListTile(
-              leading: const CircleAvatar(
-                backgroundColor: DineSwiftColors.secondaryColor,
-                child: Icon(Iconsax.user, color: DineSwiftColors.whiteColor),
+              leading: CircleAvatar(
+                backgroundImage: AssetImage(DineSwiftImages.managerAvatar),
               ),
               title: const Text(
                 'John Doe', 

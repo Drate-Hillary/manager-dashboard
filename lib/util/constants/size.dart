@@ -11,6 +11,7 @@ class DineSwiftSize{
   static const double iconXs = 12.0;
   static const double iconSm = 16.0;
   static const double iconMd = 24.0;
+  static const double iconMdx = 28.0;
   static const double iconLg = 32.0;
 
   //  font sizes
@@ -30,6 +31,7 @@ class DineSwiftSize{
 
   // Image Sizes
   static const double imageThumbSize = 80.0;
+  static const double imageFoodSize = 60.0;
 
   // Default spacing between sections
   static const double defaultSpace = 24.0;
@@ -47,6 +49,7 @@ class DineSwiftSize{
   static const double borderRadiusSm = 4.0;
   static const double borderRadiusMd = 8.0;
   static const double borderRadiusLg = 16.0;
+  static const double borderRadiusFull = 50.0;
 
   // Divider Height
   static const double dividerHeight = 1.0;
@@ -75,5 +78,17 @@ class DineSwiftSize{
 
   // Grid view spacing
   static const double gridViewSpacing = 16.0;
+
+  // sized box heights
+  static const double sizedBoxHeightSm = 8.0;
+  static const double sizedBoxHeightMd = 16.0;
+  static const double sizedBoxHeightLg = 24.0;
+  static const double sizedBoxHeightXl = 32.0;
+
+  // sized box widths
+  static const double sizedBoxWidthSm = 8.0;
+  static const double sizedBoxWidthMd = 16.0;
+  static const double sizedBoxWidthLg = 24.0;
+  static const double sizedBoxWidthXl = 32.0;
 
 }

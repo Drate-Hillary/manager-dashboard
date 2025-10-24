@@ -25,7 +25,7 @@ class DineSwiftColors {
   //error and validation colors
   static const Color errorColor = Color(0xffd32f2f);
   static const Color successColor = Color(0xff388e3c);
-  static const Color warningColor = Color(0xfff57c00);
+  static const Color warningColor = Color(0xFFF57C00);
   static const Color infoColor = Color(0xff1976d2);
 
   // neutral colors
