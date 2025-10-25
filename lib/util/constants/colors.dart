@@ -28,6 +28,14 @@ class DineSwiftColors {
   static const Color warningColor = Color(0xFFF57C00);
   static const Color infoColor = Color(0xff1976d2);
 
+  // light colors
+  static const Color lightErrorColor = Color.fromARGB(255, 255, 211, 211);
+  static const Color lightSuccessColor = Color.fromRGBO(213, 251, 215, 1);
+  static const Color lightWarningColor = Color.fromARGB(255, 255, 240, 210);
+  static const Color lightInfoColor = Color.fromARGB(255, 210, 237, 255);
+  static const Color lightTextColor = Color.fromARGB(255, 137, 56, 18);
+
+
   // neutral colors
   static const Color whiteColor = Color(0xffffffff);
   static const Color blackColor = Color(0xff000000);

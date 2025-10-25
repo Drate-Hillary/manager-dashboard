@@ -1,5 +1,6 @@
 class DineSwiftSize{
   // Padding and Margin
+  static const double xxs = 2.0;
   static const double xs = 4.0;
   static const double sm = 8.0;
   static const double smd = 13.0;
@@ -90,5 +91,8 @@ class DineSwiftSize{
   static const double sizedBoxWidthMd = 16.0;
   static const double sizedBoxWidthLg = 24.0;
   static const double sizedBoxWidthXl = 32.0;
+
+  // table size
+  static const double tableSize = 60.0;
 
 }

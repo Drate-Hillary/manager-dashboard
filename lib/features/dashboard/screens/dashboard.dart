@@ -45,6 +45,7 @@ class _DineSwiftDashboardState extends State<DineSwiftDashboard> {
                 centerTitle: false,
                 automaticallyImplyLeading: false,
                 backgroundColor: DineSwiftColors.primaryColor,
+                toolbarHeight: 80,
                 actions: [
                   badges.Badge(
                     badgeContent: const Text('3', style: TextStyle(color: Colors.white)),

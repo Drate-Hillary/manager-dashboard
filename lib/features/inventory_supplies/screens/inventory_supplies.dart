@@ -427,6 +427,13 @@ class _InventorySuppliersState extends State<InventorySupplies>
 
     return Card(
       color: DineSwiftColors.whiteColor,
+      shape: RoundedRectangleBorder(
+        side: BorderSide(
+          width: 1,
+          color: isLowStock ? DineSwiftColors.warningColor : DineSwiftColors.lightGrey,
+        ),
+        borderRadius: BorderRadius.circular(DineSwiftSize.cardRadiusLg),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(DineSwiftSize.md),
         child: Column(
@@ -486,7 +493,7 @@ class _InventorySuppliersState extends State<InventorySupplies>
                         vertical: DineSwiftSize.xs,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.orange.withValues(alpha: 0.1),
+                        color: DineSwiftColors.warningColor.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(DineSwiftSize.borderRadiusSm),
                       ),
                       child: const Text(
@@ -563,8 +570,8 @@ class _InventorySuppliersState extends State<InventorySupplies>
             padding: const EdgeInsets.all(DineSwiftSize.xs),
             decoration: BoxDecoration(
               color: isPositive
-                ? DineSwiftColors.successColor.withValues(alpha: 0.1)
-                : DineSwiftColors.warningColor.withValues(alpha: 0.1),
+                ? DineSwiftColors.successColor.withOpacity(0.1)
+                : DineSwiftColors.warningColor.withOpacity(0.1),
               borderRadius: BorderRadius.circular(6),
             ),
             child: Icon(
@@ -717,7 +724,7 @@ class _InventorySuppliersState extends State<InventorySupplies>
           padding: const EdgeInsets.all(DineSwiftSize.xs),
           decoration: BoxDecoration(
             color: DineSwiftColors.successColor.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(DineSwiftSize.borderRadiusSm),
+            borderRadius: BorderRadius.circular(DineSwiftSize.borderRadiusSm,),
           ),
           child: const Icon(Iconsax.people, size: DineSwiftSize.iconMd, color: DineSwiftColors.successColor),
         ),

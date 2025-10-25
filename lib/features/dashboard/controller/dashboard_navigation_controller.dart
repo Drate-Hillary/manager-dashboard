@@ -1,7 +1,7 @@
 import 'package:dineswift_management/features/dashboard/screens/widgets/analytics_report.dart';
 import 'package:dineswift_management/features/dashboard/screens/widgets/dashboard_overview.dart';
 import 'package:dineswift_management/features/inventory_supplies/screens/inventory_supplies.dart';
-import 'package:dineswift_management/features/dashboard/screens/widgets/operation_dispatch.dart';
+import 'package:dineswift_management/features/operations_dispatch/screens/operation_dispatch.dart';
 import 'package:dineswift_management/features/dashboard/screens/widgets/loyalty_program.dart';
 import 'package:dineswift_management/features/dashboard/screens/widgets/customer_communication.dart';
 import 'package:dineswift_management/features/dashboard/screens/widgets/system_configuration.dart';
