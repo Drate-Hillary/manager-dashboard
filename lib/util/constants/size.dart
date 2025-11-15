@@ -1,0 +1,98 @@
+class DineSwiftSize{
+  // Padding and Margin
+  static const double xxs = 2.0;
+  static const double xs = 4.0;
+  static const double sm = 8.0;
+  static const double smd = 13.0;
+  static const double md = 16.0;
+  static const double lg = 24.0;
+  static const double xl = 32.0;
+
+  // Icon Sizes
+  static const double iconXs = 12.0;
+  static const double iconSm = 16.0;
+  static const double iconMd = 24.0;
+  static const double iconMdx = 28.0;
+  static const double iconLg = 32.0;
+
+  //  font sizes
+  static const double fontSizeSm = 12.0;
+  static const double fontSizeXs = 14.0;
+  static const double fontSizeMd = 16.0;
+  static const double fontSizeLg = 18.0;
+
+  // Button Sizes
+  static const double buttonHeight = 18.0;
+  static const double buttonWidth = 120.0;
+  static const double buttonRadius = 10.0;
+  static const double buttonElevation = 4.0;
+
+  // AppBar Height
+  static const double appBarHeight = 56.0;
+
+  // Image Sizes
+  static const double imageThumbSize = 80.0;
+  static const double imageFoodSize = 60.0;
+
+  // Default spacing between sections
+  static const double defaultSpace = 24.0;
+  static const double spaceBtwItems = 16.0;
+  static const double spaceBtwSections = 32.0;
+  static const double spaceBtwCards = 20.0;
+  static const double spaceBtwRows = 12.0;
+  static const double spaceBtwColumns = 12.0;
+  static const double spaceBtwIcons = 8.0;
+  static const double spaceBtwTextAndIcon = 8.0;
+  static const double spaceBtwTextAndIconAndButton = 8.0;
+  static const double spaceBtwTextAndButton = 8.0;
+
+  // Border Radius
+  static const double borderRadiusSm = 4.0;
+  static const double borderRadiusMd = 8.0;
+  static const double borderRadiusLg = 16.0;
+  static const double borderRadiusFull = 50.0;
+
+  // Divider Height
+  static const double dividerHeight = 1.0;
+
+  // Product Item Dimensions
+  static const double productImageSize = 120.0;
+  static const double productItemHeight = 160.0;
+  static const double productItemRadius = 16.0;
+
+  // Input Field Dimensions
+  static const double inputFieldRadius = 8.0;
+  static const double spaceBtwInputFields = 16.0;
+
+  // Card Dimensions
+  static const double cardElevation = 2.0;
+  static const double cardRadiusLg = 16.0;
+  static const double cardRadiusMd = 12.0;
+  static const double cardRadiusSm = 10.0;
+  static const double cardRadiusXs = 6.0;
+
+  // Image Carousel Height
+  static const double imageCarouselHeight = 200.0;
+
+  // loading indicator size
+  static const double loadingIndicatorSize = 36.0;
+
+  // Grid view spacing
+  static const double gridViewSpacing = 16.0;
+
+  // sized box heights
+  static const double sizedBoxHeightSm = 8.0;
+  static const double sizedBoxHeightMd = 16.0;
+  static const double sizedBoxHeightLg = 24.0;
+  static const double sizedBoxHeightXl = 32.0;
+
+  // sized box widths
+  static const double sizedBoxWidthSm = 8.0;
+  static const double sizedBoxWidthMd = 16.0;
+  static const double sizedBoxWidthLg = 24.0;
+  static const double sizedBoxWidthXl = 32.0;
+
+  // table size
+  static const double tableSize = 60.0;
+
+}

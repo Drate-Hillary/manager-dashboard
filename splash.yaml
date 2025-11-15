@@ -1,0 +1,9 @@
+flutter_native_splash:
+  color: "#000000"
+  background_color: "#C34C16"
+  image: assets/images/DineSwift_logo.png
+  android: true
+  ios: true
+  web: true
+  android_gravity: center
+  ios_content_mode: center
