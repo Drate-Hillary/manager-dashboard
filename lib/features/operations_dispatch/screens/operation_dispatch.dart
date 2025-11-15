@@ -693,7 +693,12 @@ class _OperationsDispatchState extends State<OperationsDispatch> with SingleTick
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
         leading: CircleAvatar(
-          backgroundImage: AssetImage(_getCustomerImagePath(waiter.name)),
+          backgroundColor: getStatusColor(waiter.status).withOpacity(0.15),
+          radius: 22,
+          child: CircleAvatar(
+            backgroundImage: AssetImage(_getCustomerImagePath(waiter.name)),
+            radius: 18,
+          ),
         ),
         title: Text(waiter.name),
         subtitle: Column(

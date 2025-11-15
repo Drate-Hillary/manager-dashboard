@@ -1,4 +1,5 @@
 import 'package:dineswift_management/features/system_configuration/screens/widgets/add_menu.dart';
+import 'package:dineswift_management/features/system_configuration/screens/widgets/qr_code.dart';
 import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:dineswift_management/features/system_configuration/screens/widgets/add_staff.dart';
@@ -270,8 +271,18 @@ class SystemConfigurationScreen extends State<SystemConfiguration> {
             leading: const Icon(Iconsax.scan_barcode, size: 20),
             title: const Text('QR Code Management'),
             subtitle: const Text('View and manage table QR codes'),
-             trailing: const Icon(Iconsax.arrow_right_3, size: 16),
-            onTap: () { /* Navigate to QR Management Screen */ },
+            trailing: const Icon(Iconsax.arrow_right_3, size: 16),
+            onTap: () {
+              showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return const Dialog(
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(12.0))), 
+                    child: GenerateQRCode(restaurantId: 'restaurant-001'),
+                  );
+                },
+              );
+            },
           ),
           const Divider(height: 1),
            ListTile(
