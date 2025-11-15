@@ -1,3 +1,4 @@
+import 'package:dineswift_management/features/system_configuration/screens/widgets/add_menu.dart';
 import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:dineswift_management/features/system_configuration/screens/widgets/add_staff.dart';
@@ -77,7 +78,17 @@ class SystemConfigurationScreen extends State<SystemConfiguration> {
             title: const Text('Menu Management'),
             subtitle: const Text('Edit categories, items, prices, availability'),
             trailing: const Icon(Iconsax.arrow_right_3, size: 16),
-            onTap: () { /* Navigate to Menu Editor Screen */ },
+            onTap: () {
+              showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return const Dialog(
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(12.0))), 
+                    child: AddMenu(),
+                  );
+                },
+              );
+            },
           ),
           const Divider(height: 1),
            ListTile(
@@ -165,10 +176,9 @@ class SystemConfigurationScreen extends State<SystemConfiguration> {
                      showDialog(
                        context: context,
                        builder: (BuildContext context) {
-                         // Using Dialog widget for better control over shape and padding
-                         return const Dialog(shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(12.0))), child: AddStaff());
+                        return const Dialog(shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(12.0))), child: AddStaff());
                        },
-                     );
+                      );
                    },
                    style: TextButton.styleFrom(visualDensity: VisualDensity.compact),
                  ),

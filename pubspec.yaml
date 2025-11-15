@@ -19,15 +19,15 @@ dependencies:
   smooth_page_indicator: ^1.0.0+2
   flutter_staggered_animations: ^1.1.0
   fl_chart: ^1.1.1
-
   get: ^4.6.5
   get_storage: ^2.1.1
-
   iconsax: ^0.0.8
   lottie: ^3.1.0
   animated_icon: ^0.0.9
   cupertino_icons: ^1.0.8
   badges: ^3.1.2
+  image_picker: ^0.8.7+4
+  file_picker: ^5.2.5
 
 dev_dependencies:
   flutter_test:

@@ -321,8 +321,7 @@ class _AddStaffState extends State<AddStaff> {
           ),
         ),
       ),
-    ),
-    );
+    ));
   }
 
   Widget _buildWelcomeCard() {
