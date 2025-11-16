@@ -1,6 +1,8 @@
 import 'dart:io';
+import 'package:dineswift_management/util/constants/colors.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:iconsax/iconsax.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:html' as html;
 
@@ -241,49 +243,70 @@ class _AddMenuState extends State<AddMenu> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(_isEditing ? 'Edit: ${widget.menu!.name}' : 'Add New Menu'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add_circle_outline),
-            tooltip: 'Add New Item',
-            onPressed: () => _showMenuItemModal(),
-          ),
-        ],
+    return Container(
+      width: 600,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12)
       ),
-      body: Form(
-        key: _formKey,
-        child: Column(
-          children: [
-            Expanded(
-              child: CustomScrollView(
-                slivers: [
-                  // Section 1: Menu Details
-                  _buildMenuDetailsSection(),
-                  
-                  // Section 2: Menu Items
-                  _buildMenuItemsHeader(),
-                  
-                  // If empty, show a message, otherwise show the list
-                  if (_menuItems.isEmpty) 
-                    _buildEmptyItemsState()
-                  else
-                    MenuItemsList(
-                      items: _menuItems,
-                      onReorder: _onReorder,
-                      onEdit: (item) => _showMenuItemModal(itemToEdit: item),
-                      onDelete: _deleteMenuItem,
-                    ),
-                ],
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child:  Scaffold(
+          appBar: AppBar(
+            backgroundColor: DineSwiftColors.primaryColor,
+            title: Text(
+              _isEditing ? 'Edit: ${widget.menu!.name}' : 'Add New Menu',
+              style: TextStyle(
+                color: DineSwiftColors.whiteColor,
+                fontSize: 20,
+                fontWeight: FontWeight.w600
               ),
             ),
-            
-            // Save Button
-            _buildSaveButton(),
-          ],
+            actions: [
+              IconButton(
+                icon: const Icon(
+                  Icons.add_circle_outline,
+                  size: 25,
+                  color: DineSwiftColors.whiteColor,
+                ),
+                tooltip: 'Add New Item',
+                onPressed: () => _showMenuItemModal(),
+              ),
+            ],
+          ),
+          body: Form(
+            key: _formKey,
+            child: Column(
+              children: [
+                Expanded(
+                  child: CustomScrollView(
+                    slivers: [
+                      // Section 1: Menu Details
+                      _buildMenuDetailsSection(),
+
+                      // Section 2: Menu Items
+                      _buildMenuItemsHeader(),
+
+                      // If empty, show a message, otherwise show the list
+                      if (_menuItems.isEmpty) 
+                        _buildEmptyItemsState()
+                      else
+                        MenuItemsList(
+                          items: _menuItems,
+                          onReorder: _onReorder,
+                          onEdit: (item) => _showMenuItemModal(itemToEdit: item),
+                          onDelete: _deleteMenuItem,
+                        ),
+                    ],
+                  ),
+                ),
+
+                // Save Button
+                _buildSaveButton(),
+              ],
+            ),
+          ),
         ),
-      ),
+      )
     );
   }
 
@@ -320,15 +343,15 @@ class _AddMenuState extends State<AddMenu> {
         ),
         const SizedBox(height: 8),
         Container(
-          width: double.infinity,
+          width: 400,
           height: 200,
           decoration: BoxDecoration(
             border: Border.all(color: Colors.grey.shade300),
             borderRadius: BorderRadius.circular(12),
           ),
           child: _menuImageUrl == null
-              ? _buildImagePlaceholder()
-              : _buildImagePreview(),
+            ? _buildImagePlaceholder()
+            : _buildImagePreview(),
         ),
       ],
     );
@@ -340,11 +363,11 @@ class _AddMenuState extends State<AddMenu> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.add_photo_alternate, size: 48, color: Colors.grey.shade400),
+          Icon(Iconsax.camera, size: 48, color: Colors.grey.shade400),
           const SizedBox(height: 8),
           Text(
             'Tap to add menu image',
-            style: TextStyle(color: Colors.grey.shade600),
+            style: TextStyle(color: DineSwiftColors.darkGrey),
           ),
         ],
       ),
@@ -385,24 +408,52 @@ class _AddMenuState extends State<AddMenu> {
           controller: _menuNameController,
           decoration: const InputDecoration(
             labelText: 'Menu Name',
-            hintText: 'e.g., Dinner Menu',
-            border: OutlineInputBorder(),
-            prefixIcon: Icon(Icons.restaurant_menu),
+            labelStyle: TextStyle(
+              fontWeight: FontWeight.w500,
+              color: DineSwiftColors.blackColor,
+              fontSize: 16,
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.all(Radius.circular(8)),
+              borderSide: BorderSide(color: DineSwiftColors.darkGrey)
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.all(Radius.circular(8)),
+              borderSide: BorderSide(
+                color: DineSwiftColors.primaryColor,
+                width: 2.0,
+              ),
+            ),
+            prefixIcon: Icon(Iconsax.receipt),
           ),
           validator: (value) => value == null || value.isEmpty ? 'Please enter a name' : null,
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 10),
         TextFormField(
           controller: _menuDescriptionController,
           decoration: const InputDecoration(
             labelText: 'Description',
-            hintText: 'e.g., Our main selection of entrées',
-            border: OutlineInputBorder(),
-            prefixIcon: Icon(Icons.description),
+            labelStyle: TextStyle(
+              fontWeight: FontWeight.w500,
+              color: DineSwiftColors.blackColor,
+              fontSize: 16,
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.all(Radius.circular(8)),
+              borderSide: BorderSide(color: DineSwiftColors.darkGrey)
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.all(Radius.circular(8)),
+              borderSide: BorderSide(
+                color: DineSwiftColors.primaryColor,
+                width: 2.0,
+              ),
+            ),
+            prefixIcon: Icon(Iconsax.document),
           ),
           maxLines: 3,
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 10),
         SwitchListTile(
           contentPadding: EdgeInsets.zero,
           title: const Text('Menu is Active'),
@@ -430,7 +481,7 @@ class _AddMenuState extends State<AddMenu> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.fastfood, size: 64, color: Colors.grey),
+            Icon(Icons.fastfood_outlined, size: 64, color: Colors.grey),
             SizedBox(height: 16),
             Text(
               'No items added yet',
@@ -452,30 +503,39 @@ class _AddMenuState extends State<AddMenu> {
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
       child: Text(
         title,
-        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-          fontWeight: FontWeight.bold,
-        ),
+        style: TextStyle(
+          color: DineSwiftColors.blackColor,
+          fontSize: 22
+        )
       ),
     );
   }
 
   Widget _buildSaveButton() {
-    return SafeArea(
+    return Center(
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16),
         child: SizedBox(
-          width: double.infinity,
+          width: 200,
           child: ElevatedButton.icon(
             onPressed: _saveMenu,
             style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              textStyle: const TextStyle(fontSize: 18),
+              backgroundColor: DineSwiftColors.primaryColor,
             ),
-            icon: const Icon(Icons.save),
-            label: const Text('Save Menu'),
+            icon: const Icon(
+              Iconsax.save_2,
+              color: DineSwiftColors.whiteColor),
+            label: const Text(
+              'Save Item',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+                color: DineSwiftColors.whiteColor
+              ),
+            ),
           ),
         ),
-      ),
+      )
     );
   }
 
@@ -547,7 +607,7 @@ class MenuItemsList extends StatelessWidget {
                   onPressed: () => onEdit(item),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.delete, color: Colors.red),
+                  icon: const Icon(Iconsax.trash, color: Colors.red),
                   onPressed: () => _showDeleteConfirmation(context, index),
                 ),
               ],
@@ -745,7 +805,11 @@ class _MenuItemEditorModalState extends State<MenuItemEditorModal> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        color: DineSwiftColors.whiteColor,
+      ),
       padding: EdgeInsets.fromLTRB(16, 16, 16, 16 + MediaQuery.of(context).viewInsets.bottom),
       child: SingleChildScrollView(
         child: Form(
@@ -757,11 +821,14 @@ class _MenuItemEditorModalState extends State<MenuItemEditorModal> {
               // Header
               Row(
                 children: [
-                  Icon(_isEditing ? Icons.edit : Icons.add, size: 24),
+                  Icon(_isEditing ? Iconsax.pen_add : Iconsax.add, size: 24),
                   const SizedBox(width: 8),
                   Text(
                     _isEditing ? 'Edit Item' : 'Add New Item',
-                    style: Theme.of(context).textTheme.headlineSmall,
+                    style: TextStyle(
+                      color: DineSwiftColors.blackColor,
+                      fontSize: 20,
+                    ),
                   ),
                 ],
               ),
@@ -776,12 +843,26 @@ class _MenuItemEditorModalState extends State<MenuItemEditorModal> {
               const SizedBox(height: 16),
 
               // Save Button
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: _saveItem,
-                  icon: const Icon(Icons.save),
-                  label: const Text('Save Item'),
+              Center(
+                child: SizedBox(
+                  width: 200,
+                  child: ElevatedButton.icon(
+                    onPressed: _saveItem,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: DineSwiftColors.primaryColor,
+                    ),
+                    icon: const Icon(
+                      Iconsax.save_2,
+                      color: DineSwiftColors.whiteColor),
+                    label: const Text(
+                      'Save Item',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                        color: DineSwiftColors.whiteColor
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ],
@@ -797,19 +878,22 @@ class _MenuItemEditorModalState extends State<MenuItemEditorModal> {
       children: [
         Text(
           'Item Image',
-          style: Theme.of(context).textTheme.titleMedium,
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w500,
+            color: DineSwiftColors.blackColor
+          ),
         ),
-        const SizedBox(height: 8),
         Container(
-          width: 120,
-          height: 120,
+          width: 150,
+          height: 150,
           decoration: BoxDecoration(
             border: Border.all(color: Colors.grey.shade300),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(8),
           ),
           child: _itemImageUrl == null
-              ? _buildItemImagePlaceholder()
-              : _buildItemImagePreview(),
+            ? _buildItemImagePlaceholder()
+            : _buildItemImagePreview(),
         ),
       ],
     );
@@ -822,8 +906,8 @@ class _MenuItemEditorModalState extends State<MenuItemEditorModal> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.add_a_photo, size: 32, color: Colors.grey.shade400),
-          const SizedBox(height: 4),
+          Icon(Iconsax.image4, size: 32, color: Colors.grey.shade400),
+          const SizedBox(height: 2),
           Text(
             'Add Photo',
             style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
@@ -840,8 +924,8 @@ class _MenuItemEditorModalState extends State<MenuItemEditorModal> {
           borderRadius: BorderRadius.circular(12.0),
           child: _buildImageWidget(
             _itemImageUrl!,
-            width: 120,
-            height: 120,
+            width: 150,
+            height: 150,
             fit: BoxFit.cover,
           ),
         ),
@@ -852,7 +936,7 @@ class _MenuItemEditorModalState extends State<MenuItemEditorModal> {
             radius: 12,
             backgroundColor: Colors.black54,
             child: IconButton(
-              icon: const Icon(Icons.close, size: 12, color: Colors.white),
+              icon: const Icon(Icons.close, size: 12, color: DineSwiftColors.whiteColor),
               onPressed: _removeItemImage,
               padding: EdgeInsets.zero,
             ),
@@ -887,68 +971,149 @@ class _MenuItemEditorModalState extends State<MenuItemEditorModal> {
         TextFormField(
           controller: _nameController,
           decoration: const InputDecoration(
-            labelText: 'Item Name *',
-            border: OutlineInputBorder(),
-            prefixIcon: Icon(Icons.fastfood),
+            labelText: 'Item Name',
+            labelStyle: TextStyle(
+              fontWeight: FontWeight.w500,
+              color: DineSwiftColors.blackColor,
+              fontSize: 14,
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.all(Radius.circular(4))
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.all(Radius.circular(8)),
+              borderSide: BorderSide(
+                color: DineSwiftColors.infoColor,
+                width: 2.0,
+              ),
+            ),
+            prefixIcon: Icon(Icons.fastfood_outlined),
           ),
           validator: (value) => (value?.isEmpty ?? true) ? 'Required' : null,
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 10),
         TextFormField(
           controller: _descriptionController,
           decoration: const InputDecoration(
             labelText: 'Item Description',
-            border: OutlineInputBorder(),
-            prefixIcon: Icon(Icons.description),
+            labelStyle: TextStyle(
+              fontWeight: FontWeight.w500,
+              color: DineSwiftColors.blackColor,
+              fontSize: 14,
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.all(Radius.circular(4))
+            ),
+            prefixIcon: Icon(Iconsax.document_text),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.all(Radius.circular(8)),
+              borderSide: BorderSide(
+                color: DineSwiftColors.infoColor,
+                width: 2.0,
+              ),
+            ),
           ),
           maxLines: 2,
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 10),
         Row(
           children: [
             Expanded(
               child: TextFormField(
                 controller: _priceController,
                 decoration: const InputDecoration(
-                  labelText: 'Price *',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.attach_money),
+                  labelText: 'Price',
+                  labelStyle: TextStyle(
+                    fontWeight: FontWeight.w500,
+                    color: DineSwiftColors.blackColor,
+                    fontSize: 14,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(4))
+                  ),
+                  prefixIcon: Icon(Iconsax.money),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(8)),
+                    borderSide: BorderSide(
+                      color: DineSwiftColors.infoColor,
+                      width: 2.0,
+                    ),
+                  ),
                 ),
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 validator: (value) => (value?.isEmpty ?? true) ? 'Required' : null,
               ),
             ),
-            const SizedBox(width: 16),
+            const SizedBox(width: 10),
             Expanded(
               child: TextFormField(
                 controller: _prepTimeController,
                 decoration: const InputDecoration(
                   labelText: 'Prep Time',
+                  labelStyle: TextStyle(
+                    fontWeight: FontWeight.w500,
+                    color: DineSwiftColors.blackColor,
+                    fontSize: 14,
+                  ),
                   border: OutlineInputBorder(),
                   suffixText: 'min',
-                  prefixIcon: Icon(Icons.timer),
+                  prefixIcon: Icon(Iconsax.clock),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(8)),
+                    borderSide: BorderSide(
+                      color: DineSwiftColors.infoColor,
+                      width: 2.0,
+                    ),
+                  ),
                 ),
                 keyboardType: TextInputType.number,
               ),
             ),
           ],
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 10),
         TextFormField(
           controller: _departmentController,
           decoration: const InputDecoration(
             labelText: 'Department',
+            labelStyle: TextStyle(
+              fontWeight: FontWeight.w500,
+              color: DineSwiftColors.blackColor,
+              fontSize: 14,
+            ),
             hintText: 'e.g., Grill, Bar',
             border: OutlineInputBorder(),
-            prefixIcon: Icon(Icons.room_service),
+            prefixIcon: Icon(Iconsax.card),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.all(Radius.circular(8)),
+              borderSide: BorderSide(
+                color: DineSwiftColors.infoColor,
+                width: 2.0,
+              ),
+            ),
           ),
         ),
-        const SizedBox(height: 16),
-        SwitchListTile(
-          contentPadding: EdgeInsets.zero,
-          title: const Text('Item is Available'),
-          value: _isAvailable,
-          onChanged: (value) => setState(() => _isAvailable = value),
+        const SizedBox(height: 14),
+        Container(
+          decoration: BoxDecoration(
+            color: DineSwiftColors.softGrey.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: SwitchListTile(
+            thumbColor: MaterialStateProperty.all(DineSwiftColors.primaryColor),
+            activeTrackColor: DineSwiftColors.primaryColor.withOpacity(0.2),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 12.0),
+            title: const Text(
+              'Is Available',
+              style: TextStyle(
+                fontWeight: FontWeight.w500,
+                color: DineSwiftColors.blackColor,
+                fontSize: 16,
+              ),
+            ),
+            value: _isAvailable,
+            onChanged: (value) => setState(() => _isAvailable = value),
+          ),
         ),
       ],
     );

@@ -2,9 +2,36 @@ import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:dineswift_management/util/constants/colors.dart';
 import 'package:dineswift_management/util/constants/size.dart';
+import 'package:dineswift_management/data/supabase_service.dart';
 
-class DashboardOverview extends StatelessWidget {
+class DashboardOverview extends StatefulWidget {
   const DashboardOverview({super.key});
+
+  @override
+  State<DashboardOverview> createState() => _DashboardOverviewState();
+}
+
+class _DashboardOverviewState extends State<DashboardOverview> {
+  int orderCount = 0;
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadOrderCount();
+  }
+
+  Future<void> _loadOrderCount() async {
+    try {
+      final count = await SupabaseService.getOrderCount();
+      setState(() {
+        orderCount = count;
+        isLoading = false;
+      });
+    } catch (e) {
+      setState(() => isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -79,11 +106,11 @@ class DashboardOverview extends StatelessWidget {
 
   /// Builds the responsive row of KPI cards
   Widget buildingCards(BuildContext context) {
-    return const Wrap(
+    return Wrap(
       spacing: DineSwiftSize.spaceBtwCards,
       runSpacing: DineSwiftSize.xs,
       children: [
-        KpiCard(
+        const KpiCard(
           title: "Today's Revenue",
           value: "UGX 111,450", // Example data
           icon: Iconsax.wallet,
@@ -91,7 +118,7 @@ class DashboardOverview extends StatelessWidget {
         ),
         KpiCard(
           title: "Active Orders",
-          value: "12", 
+          value: isLoading ? "..." : "$orderCount", 
           icon: Iconsax.shopping_cart,
           color: Colors.blue,
         ),
