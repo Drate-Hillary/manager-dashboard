@@ -23,4 +23,23 @@ class SupabaseService {
   static Future<void> registerRestaurant(Map<String, dynamic> data) async {
     await client.from('restaurants').insert(data);
   }
+
+  static Future<void> saveMenu(Map<String, dynamic> menuData, List<Map<String, dynamic>> items) async {
+    final menuResponse = await client.from('menus').insert(menuData).select().single();
+    final menuId = menuResponse['id'];
+    
+    if (items.isNotEmpty) {
+      final itemsWithMenuId = items.map((item) => {...item, 'menu_id': menuId}).toList();
+      await client.from('menu_items').insert(itemsWithMenuId);
+    }
+  }
+
+  static Future<List<Map<String, dynamic>>> getRestaurantMenus(String restaurantId) async {
+    final response = await client.from('menus').select().eq('restaurant_id', restaurantId);
+    return List<Map<String, dynamic>>.from(response);
+  }
+
+  static Future<void> saveRestaurantTable(Map<String, dynamic> tableData) async {
+    await client.from('restaurant_tables').insert(tableData);
+  }
 }

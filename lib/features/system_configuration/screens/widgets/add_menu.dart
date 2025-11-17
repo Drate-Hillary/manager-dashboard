@@ -1,12 +1,12 @@
 import 'dart:io';
 import 'package:dineswift_management/util/constants/colors.dart';
+import 'package:dineswift_management/data/supabase_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:image_picker/image_picker.dart';
-import 'dart:html' as html;
+import 'package:uuid/uuid.dart';
 
-// --- Data Models (based on your schema) ---
 class Menu {
   String id;
   String restaurantId;
@@ -60,24 +60,13 @@ class ImagePickerService {
   static final _picker = ImagePicker();
 
   static Future<String?> pickImage({ImageSource source = ImageSource.gallery}) async {
-    if (kIsWeb) {
-      final html.FileUploadInputElement uploadInput = html.FileUploadInputElement();
-      uploadInput.accept = 'image/*';
-      uploadInput.click();
-      
-      await uploadInput.onChange.first;
-      final files = uploadInput.files;
-      if (files != null && files.isNotEmpty) {
-        final file = files[0];
-        final reader = html.FileReader();
-        reader.readAsDataUrl(file);
-        await reader.onLoad.first;
-        return reader.result as String?;
-      }
-      return null;
-    }
     final pickedFile = await _picker.pickImage(source: source);
-    return pickedFile?.path;
+    if (pickedFile == null) return null;
+    
+    if (kIsWeb) {
+      return pickedFile.path;
+    }
+    return pickedFile.path;
   }
 }
 
@@ -85,6 +74,7 @@ class ImagePickerService {
 class AddMenu extends StatefulWidget {
   final Menu? menu;
   const AddMenu({super.key, this.menu});
+  final uuid = const Uuid();
 
   @override
   State<AddMenu> createState() => _AddMenuState();
@@ -98,6 +88,7 @@ class _AddMenuState extends State<AddMenu> {
   late bool _isMenuActive;
   late List<MenuItem> _menuItems;
   String? _menuImageUrl;
+  List<Map<String, dynamic>> _allMenus = [];
 
   bool get _isEditing => widget.menu != null;
 
@@ -105,6 +96,7 @@ class _AddMenuState extends State<AddMenu> {
   void initState() {
     super.initState();
     _initializeData();
+    _fetchAllMenus();
   }
 
   void _initializeData() {
@@ -113,6 +105,15 @@ class _AddMenuState extends State<AddMenu> {
     _isMenuActive = widget.menu?.isActive ?? true;
     _menuImageUrl = widget.menu?.imageUrl;
     _menuItems = List<MenuItem>.from(widget.menu?.items ?? []);
+  }
+
+  Future<void> _fetchAllMenus() async {
+    try {
+      final menus = await SupabaseService.getRestaurantMenus('55c67be9-90c1-404c-a28b-8fac87dfb85c');
+      if (mounted) setState(() => _allMenus = menus);
+    } catch (e) {
+      // Handle error fetching menus
+    }
   }
 
   @override
@@ -199,6 +200,7 @@ class _AddMenuState extends State<AddMenu> {
       isScrollControlled: true,
       builder: (context) => MenuItemEditorModal(
         item: itemToEdit,
+        menus: _allMenus,
         onSave: (editedItem) {
           setState(() {
             if (itemToEdit == null) {
@@ -215,29 +217,73 @@ class _AddMenuState extends State<AddMenu> {
     );
   }
   
-  void _saveMenu() {
+  Future<void> _saveMenu() async {
     if (_formKey.currentState!.validate()) {
-      final Menu savedMenu = Menu(
-        id: widget.menu?.id ?? 'new-menu-id-${DateTime.now().millisecondsSinceEpoch}',
-        restaurantId: 'your-restaurant-id',
-        name: _menuNameController.text,
-        description: _menuDescriptionController.text,
-        isActive: _isMenuActive,
-        imageUrl: _menuImageUrl,
-        items: _menuItems,
-      );
-      
-      // Send to backend
-      print('--- SAVING MENU ---');
-      print('Menu Name: ${savedMenu.name}');
-      print('Is Active: ${savedMenu.isActive}');
-      print('Image URL: ${savedMenu.imageUrl}');
-      print('Items: ${savedMenu.items.length}');
-      
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Menu saved successfully!')),
+        const SnackBar(
+          backgroundColor: DineSwiftColors.lightSuccessColor,
+          duration: Duration(seconds: 30),
+          content: Text(
+            'Saving menu...',
+            style: TextStyle(color: DineSwiftColors.successColor)
+          ),
+          showCloseIcon: true,
+          closeIconColor: DineSwiftColors.successColor,
+          dismissDirection: DismissDirection.up,
+        ),
       );
-      Navigator.pop(context);
+
+      final menuData = {
+        'id': _isEditing ? widget.menu!.id : widget.uuid.v4(),
+        'restaurant_id': '55c67be9-90c1-404c-a28b-8fac87dfb85c', // Hardcoded restaurant ID
+        'name': _menuNameController.text,
+        'description': _menuDescriptionController.text,
+        'is_active': _isMenuActive,
+        'version': _isEditing ? widget.menu!.version + 1 : 1,
+        'created_at': DateTime.now().toIso8601String(),
+        'updated_at': DateTime.now().toIso8601String(),
+        if (_menuImageUrl != null) 'menu_image': _menuImageUrl,
+      };
+
+      final items = _menuItems.map((item) => {
+        'id': item.id.startsWith('new-item-id-') ? widget.uuid.v4() : item.id,
+        'menu_id': item.menuId,
+        'item_name': item.itemName,
+        'description': item.description,
+        'sales_price': item.salesPrice,
+        'preparation_time': item.preparationTime,
+        'department': item.department,
+        'is_available': item.isAvailable,
+        'display_order': item.displayOrder,
+        'created_at': DateTime.now().toIso8601String(),
+        'updated_at': DateTime.now().toIso8601String(),
+        if (item.imageUrl != null) 'menu_item_image': item.imageUrl,
+      }).toList();
+
+      try {
+        await SupabaseService.saveMenu(menuData, items);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'Menu saved successfully!',
+                style: TextStyle(color: DineSwiftColors.successColor)
+              ),
+              backgroundColor: DineSwiftColors.lightSuccessColor,
+            ),
+          );
+          Navigator.pop(context);
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
     }
   }
 
@@ -246,7 +292,8 @@ class _AddMenuState extends State<AddMenu> {
     return Container(
       width: 600,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12)
+        borderRadius: BorderRadius.circular(12),
+        color: DineSwiftColors.whiteColor,
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(12),
@@ -505,7 +552,7 @@ class _AddMenuState extends State<AddMenu> {
         title,
         style: TextStyle(
           color: DineSwiftColors.blackColor,
-          fontSize: 22
+          fontSize: 20
         )
       ),
     );
@@ -582,18 +629,29 @@ class MenuItemsList extends StatelessWidget {
         final item = items[index];
         return Card(
           key: ValueKey(item.id),
+          color: DineSwiftColors.whiteColor,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+            side: const BorderSide(color: DineSwiftColors.primaryColor, width: 0.5),
+          ),
           margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
           child: ListTile(
             leading: _buildItemLeading(item),
-            title: Text(item.itemName),
+            title: Text(item.itemName, style: TextStyle(color: DineSwiftColors.iconColor, fontSize: 16, fontWeight: FontWeight.w600),),
             subtitle: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('\$${item.salesPrice.toStringAsFixed(2)}'),
+                Text(
+                  'UgX ${item.salesPrice.toStringAsFixed(2)}',
+                  style: const TextStyle(
+                    fontSize: 14, 
+                    color: DineSwiftColors.blackColor
+                  )
+                ),
                 if (item.description.isNotEmpty)
                   Text(
                     item.description,
-                    style: Theme.of(context).textTheme.bodySmall,
+                    style: TextStyle(fontSize: 12, color: DineSwiftColors.darkGrey),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -603,11 +661,21 @@ class MenuItemsList extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 IconButton(
-                  icon: const Icon(Icons.edit, color: Colors.blue),
+                  hoverColor: DineSwiftColors.infoColor.withOpacity(0.1),
+                  icon: const Icon(
+                    Iconsax.edit, 
+                    color: DineSwiftColors.infoColor,
+                    size: 20,
+                  ),
                   onPressed: () => onEdit(item),
                 ),
                 IconButton(
-                  icon: const Icon(Iconsax.trash, color: Colors.red),
+                  hoverColor: DineSwiftColors.errorColor.withOpacity(0.1),
+                  icon: const Icon(
+                    Iconsax.trash, 
+                    color: DineSwiftColors.errorColor,
+                    size: 20,
+                  ),
                   onPressed: () => _showDeleteConfirmation(context, index),
                 ),
               ],
@@ -623,24 +691,24 @@ class MenuItemsList extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        ReorderableDragStartListener(
-          index: items.indexWhere((i) => i.id == item.id),
-          child: const Icon(Icons.drag_handle, color: Colors.grey),
-        ),
-        const SizedBox(width: 8),
         if (item.imageUrl != null)
           CircleAvatar(
-            child: ClipOval(
-              child: _buildImageWidget(item.imageUrl!, width: 40, height: 40, fit: BoxFit.cover),
-            ),
             radius: 20,
+            child: CircleAvatar(
+              child: _buildImageWidget(
+                item.imageUrl!, 
+                width: 40, 
+                height: 40, 
+                fit: BoxFit.cover
+              ),
+            ),
           )
         else
           CircleAvatar(
             backgroundColor: Colors.grey.shade200,
             radius: 20,
             child: const Icon(Icons.fastfood, size: 20, color: Colors.grey),
-          ),
+          )
       ],
     );
   }
@@ -668,19 +736,51 @@ class MenuItemsList extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Item'),
-        content: const Text('Are you sure you want to delete this menu item?'),
+        backgroundColor: DineSwiftColors.whiteColor,
+        icon: const Icon(
+          Iconsax.trash,
+          color: DineSwiftColors.errorColor,
+          size: 40,
+        ),
+        title: const Text(
+          'Delete Item',
+          style: TextStyle(
+            fontWeight: FontWeight.w500,
+            color: DineSwiftColors.errorColor,
+            fontSize: 20
+          )
+        ),
+        content: const Text(
+          'Are you sure you want to delete this menu item?',
+          style: TextStyle(
+            fontSize: 17,
+            color: DineSwiftColors.blackColor
+          ),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            style: TextButton.styleFrom(
+              backgroundColor: DineSwiftColors.softGrey.withOpacity(0.2),
+              foregroundColor: DineSwiftColors.blackColor,
+            ),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: DineSwiftColors.blackColor)
+            ),
           ),
           TextButton(
+            style: TextButton.styleFrom(
+              backgroundColor: DineSwiftColors.errorColor.withOpacity(0.1),
+              foregroundColor: DineSwiftColors.errorColor,
+            ),
             onPressed: () {
               onDelete(index);
               Navigator.pop(context);
             },
-            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+            child: const Text('Delete',
+              style: TextStyle(color: DineSwiftColors.errorColor)
+            ),
           ),
         ],
       ),
@@ -692,7 +792,8 @@ class MenuItemsList extends StatelessWidget {
 class MenuItemEditorModal extends StatefulWidget {
   final MenuItem? item;
   final Function(MenuItem) onSave;
-  const MenuItemEditorModal({super.key, this.item, required this.onSave});
+  final List<Map<String, dynamic>> menus;
+  const MenuItemEditorModal({super.key, this.item, required this.onSave, required this.menus});
 
   @override
   State<MenuItemEditorModal> createState() => _MenuItemEditorModalState();
@@ -708,6 +809,7 @@ class _MenuItemEditorModalState extends State<MenuItemEditorModal> {
   late final TextEditingController _departmentController;
   late bool _isAvailable;
   String? _itemImageUrl;
+  String? _selectedMenuId;
 
   bool get _isEditing => widget.item != null;
 
@@ -725,6 +827,7 @@ class _MenuItemEditorModalState extends State<MenuItemEditorModal> {
     _departmentController = TextEditingController(text: widget.item?.department ?? 'Kitchen');
     _isAvailable = widget.item?.isAvailable ?? true;
     _itemImageUrl = widget.item?.imageUrl;
+    _selectedMenuId = widget.item?.menuId;
   }
 
   @override
@@ -789,7 +892,7 @@ class _MenuItemEditorModalState extends State<MenuItemEditorModal> {
     if (_formKey.currentState!.validate()) {
       final newItem = MenuItem(
         id: widget.item?.id ?? 'new-item-id-${DateTime.now().millisecondsSinceEpoch}',
-        menuId: widget.item?.menuId ?? '',
+        menuId: _selectedMenuId ?? '',
         itemName: _nameController.text,
         description: _descriptionController.text,
         salesPrice: double.tryParse(_priceController.text) ?? 0.0,
@@ -1055,7 +1158,9 @@ class _MenuItemEditorModalState extends State<MenuItemEditorModal> {
                     color: DineSwiftColors.blackColor,
                     fontSize: 14,
                   ),
-                  border: OutlineInputBorder(),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(4))
+                  ),
                   suffixText: 'min',
                   prefixIcon: Icon(Iconsax.clock),
                   focusedBorder: OutlineInputBorder(
@@ -1082,7 +1187,9 @@ class _MenuItemEditorModalState extends State<MenuItemEditorModal> {
               fontSize: 14,
             ),
             hintText: 'e.g., Grill, Bar',
-            border: OutlineInputBorder(),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.all(Radius.circular(4))
+            ),
             prefixIcon: Icon(Iconsax.card),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.all(Radius.circular(8)),

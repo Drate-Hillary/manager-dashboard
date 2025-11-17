@@ -1,7 +1,14 @@
+import 'package:dineswift_management/util/constants/colors.dart';
+import 'package:dineswift_management/data/supabase_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/rendering.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'package:uuid/uuid.dart';
+import 'dart:ui' as ui;
+import 'dart:typed_data';
+import 'dart:html' as html;
 import 'dart:math' as math;
 
 // --- Data Models ---
@@ -11,7 +18,6 @@ class RestaurantTable {
   final String tableNumber;
   final int capacity;
   final TableStatus tableStatus;
-  final Map<String, dynamic>? coordinates;
   final String qrCode;
   final DateTime createdAt;
 
@@ -21,7 +27,6 @@ class RestaurantTable {
     required this.tableNumber,
     required this.capacity,
     required this.tableStatus,
-    this.coordinates,
     required this.qrCode,
     required this.createdAt,
   });
@@ -29,25 +34,19 @@ class RestaurantTable {
   // Convert to map for database operations
   Map<String, dynamic> toMap() {
     return {
-      'table_id': tableId,
+      'id': tableId,
       'restaurant_id': restaurantId,
       'table_number': tableNumber,
       'capacity': capacity,
       'table_status': tableStatus.toString().split('.').last,
-      'coordinates': coordinates,
       'qr_code': qrCode,
       'created_at': createdAt.toIso8601String(),
+      'updated_at': DateTime.now().toIso8601String(),
     };
   }
 }
 
-enum TableStatus {
-  available,
-  occupied,
-  reserved,
-  cleaning,
-  maintenance,
-}
+enum TableStatus { available, occupied, reserved, cleaning, maintenance }
 
 // --- QR Code Generation Service ---
 class QRCodeService {
@@ -58,29 +57,31 @@ class QRCodeService {
   }) {
     // Generate a unique QR code data that can be used to identify the table
     final data = {
-      'table_id': tableId,
+      'id': tableId,
       'restaurant_id': restaurantId,
       'table_number': tableNumber,
       'type': 'restaurant_table',
       'timestamp': DateTime.now().millisecondsSinceEpoch.toString(),
     };
-    
+
     // Convert to JSON string for QR code
     return 'restaurant://table/${Uri.encodeComponent(tableId)}?restaurant=${Uri.encodeComponent(restaurantId)}&table=${Uri.encodeComponent(tableNumber)}';
   }
 
   static String generateUniqueQRCodeValue() {
     // Generate a unique string for the qr_code field in database
-    return 'table_${DateTime.now().millisecondsSinceEpoch}_${_generateRandomString(8)}';
+    return 'table ${DateTime.now().millisecondsSinceEpoch}_${_generateRandomString(8)}';
   }
 
   static String _generateRandomString(int length) {
     const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
     final random = SystemRandom();
-    return String.fromCharCodes(Iterable.generate(
-      length,
-      (_) => chars.codeUnitAt(random.nextInt(chars.length)),
-    ));
+    return String.fromCharCodes(
+      Iterable.generate(
+        length,
+        (_) => chars.codeUnitAt(random.nextInt(chars.length)),
+      ),
+    );
   }
 }
 
@@ -96,15 +97,14 @@ class GenerateQRCode extends StatefulWidget {
 
 class _GenerateQRCodeState extends State<GenerateQRCode> {
   final _formKey = GlobalKey<FormState>();
-  
+
   // Form Controllers
   final _tableNumberController = TextEditingController();
   final _capacityController = TextEditingController();
-  
+
   // Form Values
   TableStatus _tableStatus = TableStatus.available;
-  Map<String, dynamic>? _coordinates;
-  
+
   // Generated Data
   RestaurantTable? _generatedTable;
   bool _isGenerating = false;
@@ -128,23 +128,22 @@ class _GenerateQRCodeState extends State<GenerateQRCode> {
 
     try {
       // Generate unique IDs and QR code
-      final tableId = 'table_${DateTime.now().millisecondsSinceEpoch}';
+      final tableId = const Uuid().v4();
       final qrCodeValue = QRCodeService.generateUniqueQRCodeValue();
-      
+
       // Create the table object
       final newTable = RestaurantTable(
         tableId: tableId,
-        restaurantId: widget.restaurantId,
+        restaurantId: '55c67be9-90c1-404c-a28b-8fac87dfb85c',
         tableNumber: _tableNumberController.text,
         capacity: int.parse(_capacityController.text),
         tableStatus: _tableStatus,
-        coordinates: _coordinates,
         qrCode: qrCodeValue,
         createdAt: DateTime.now(),
       );
 
-      // In a real app, you would save to your database here
-      // await supabase.from('restaurant_tables').insert(newTable.toMap());
+      // Save to database
+      await SupabaseService.saveRestaurantTable(newTable.toMap());
 
       setState(() {
         _generatedTable = newTable;
@@ -162,7 +161,7 @@ class _GenerateQRCodeState extends State<GenerateQRCode> {
       setState(() {
         _isGenerating = false;
       });
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error generating table: $e'),
@@ -177,7 +176,6 @@ class _GenerateQRCodeState extends State<GenerateQRCode> {
     _tableNumberController.clear();
     _capacityController.clear();
     _tableStatus = TableStatus.available;
-    _coordinates = null;
     setState(() {
       _generatedTable = null;
     });
@@ -190,7 +188,7 @@ class _GenerateQRCodeState extends State<GenerateQRCode> {
         restaurantId: _generatedTable!.restaurantId,
         tableNumber: _generatedTable!.tableNumber,
       );
-      
+
       Clipboard.setData(ClipboardData(text: qrData));
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('QR Code data copied to clipboard!')),
@@ -199,43 +197,94 @@ class _GenerateQRCodeState extends State<GenerateQRCode> {
   }
 
   Future<void> _saveQRCodeAsImage() async {
-    // In a real app, you would implement QR code image saving
-    // This is a placeholder for the functionality
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('QR Code saved to gallery!')),
-    );
+    try {
+      if (_generatedTable == null) return;
+      
+      final qrData = QRCodeService.generateQRCodeData(
+        tableId: _generatedTable!.tableId,
+        restaurantId: _generatedTable!.restaurantId,
+        tableNumber: _generatedTable!.tableNumber,
+      );
+      
+      // Create QR code painter
+      final qrPainter = QrPainter(
+        data: qrData,
+        version: QrVersions.auto,
+        gapless: false,
+        color: Colors.black,
+        emptyColor: Colors.white,
+      );
+      
+      // Convert to image
+      final picData = await qrPainter.toImageData(512);
+      final pngBytes = picData!.buffer.asUint8List();
+      
+      // Create download for web
+      final blob = html.Blob([pngBytes]);
+      final url = html.Url.createObjectUrlFromBlob(blob);
+      final fileName = 'QR_${_generatedTable!.tableNumber.replaceAll(' ', '_')}_${DateTime.now().millisecondsSinceEpoch}.png';
+      
+      final anchor = html.AnchorElement(href: url)
+        ..setAttribute('download', fileName)
+        ..click();
+      
+      html.Url.revokeObjectUrl(url);
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('QR Code downloaded!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error saving QR code: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Generate Table QR Code'),
-        actions: [
-          if (_generatedTable != null)
-            IconButton(
-              icon: const Icon(Icons.refresh),
-              onPressed: _resetForm,
-              tooltip: 'Create New Table',
-            ),
-        ],
+    return Container(
+      width: 600,
+      padding: const EdgeInsets.all(8.0),
+      decoration: BoxDecoration(
+        color: DineSwiftColors.whiteColor,
+        borderRadius: BorderRadius.circular(12),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            if (_generatedTable == null) 
-              _buildTableCreationForm()
-            else
-              _buildQRCodeDisplay(),
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Generate Table QR Code'),
+          actions: [
+            if (_generatedTable != null)
+              IconButton(
+                icon: const Icon(Icons.refresh),
+                onPressed: _resetForm,
+                tooltip: 'Create New Table',
+              ),
           ],
+        ),
+        body: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            children: [
+              if (_generatedTable == null)
+                _buildTableCreationForm()
+              else
+                _buildQRCodeDisplay(),
+            ],
+          ),
         ),
       ),
     );
   }
 
   Widget _buildTableCreationForm() {
-    return Expanded(
+    return Container(
+      color: DineSwiftColors.whiteColor,
       child: SingleChildScrollView(
         child: Form(
           key: _formKey,
@@ -247,9 +296,9 @@ class _GenerateQRCodeState extends State<GenerateQRCode> {
               const SizedBox(height: 8),
               Text(
                 'Fill in the table details to generate a unique QR code',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Colors.grey[600],
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
               ),
               const SizedBox(height: 24),
 
@@ -299,8 +348,6 @@ class _GenerateQRCodeState extends State<GenerateQRCode> {
               _buildTableStatusDropdown(),
               const SizedBox(height: 16),
 
-              // Optional Coordinates Section
-              _buildCoordinatesSection(),
               const SizedBox(height: 32),
 
               // Generate Button
@@ -310,7 +357,10 @@ class _GenerateQRCodeState extends State<GenerateQRCode> {
                   onPressed: _isGenerating ? null : _generateTableAndQRCode,
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
-                    textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    textStyle: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   icon: _isGenerating
                       ? const SizedBox(
@@ -319,7 +369,9 @@ class _GenerateQRCodeState extends State<GenerateQRCode> {
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : const Icon(Icons.qr_code_2),
-                  label: Text(_isGenerating ? 'Generating...' : 'Generate QR Code'),
+                  label: Text(
+                    _isGenerating ? 'Generating...' : 'Generate QR Code',
+                  ),
                 ),
               ),
             ],
@@ -342,9 +394,7 @@ class _GenerateQRCodeState extends State<GenerateQRCode> {
           value: status,
           child: Text(
             _formatTableStatus(status),
-            style: TextStyle(
-              color: _getStatusColor(status),
-            ),
+            style: TextStyle(color: _getStatusColor(status)),
           ),
         );
       }).toList(),
@@ -355,81 +405,6 @@ class _GenerateQRCodeState extends State<GenerateQRCode> {
           });
         }
       },
-    );
-  }
-
-  Widget _buildCoordinatesSection() {
-    return Card(
-      elevation: 1,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                const Icon(Icons.location_on, size: 20),
-                const SizedBox(width: 8),
-                Text(
-                  'Table Coordinates (Optional)',
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Set the table position on your restaurant layout map',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Colors.grey[600],
-              ),
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: TextFormField(
-                    decoration: const InputDecoration(
-                      labelText: 'X Coordinate',
-                      hintText: 'e.g., 120',
-                      border: OutlineInputBorder(),
-                    ),
-                    keyboardType: TextInputType.number,
-                    onChanged: (value) {
-                      final x = double.tryParse(value);
-                      if (x != null) {
-                        setState(() {
-                          _coordinates ??= {};
-                          _coordinates!['x'] = x;
-                        });
-                      }
-                    },
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: TextFormField(
-                    decoration: const InputDecoration(
-                      labelText: 'Y Coordinate',
-                      hintText: 'e.g., 80',
-                      border: OutlineInputBorder(),
-                    ),
-                    keyboardType: TextInputType.number,
-                    onChanged: (value) {
-                      final y = double.tryParse(value);
-                      if (y != null) {
-                        setState(() {
-                          _coordinates ??= {};
-                          _coordinates!['y'] = y;
-                        });
-                      }
-                    },
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
     );
   }
 
@@ -459,10 +434,11 @@ class _GenerateQRCodeState extends State<GenerateQRCode> {
                         children: [
                           Text(
                             'Table Created Successfully!',
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              color: Colors.green[700],
-                              fontWeight: FontWeight.bold,
-                            ),
+                            style: Theme.of(context).textTheme.titleMedium
+                                ?.copyWith(
+                                  color: Colors.green[700],
+                                  fontWeight: FontWeight.bold,
+                                ),
                           ),
                           Text(
                             'QR code has been generated for ${_generatedTable!.tableNumber}',
@@ -506,9 +482,8 @@ class _GenerateQRCodeState extends State<GenerateQRCode> {
                     const SizedBox(height: 16),
                     Text(
                       _generatedTable!.tableNumber,
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style: Theme.of(context).textTheme.headlineSmall
+                          ?.copyWith(fontWeight: FontWeight.bold),
                     ),
                     Text(
                       'Capacity: ${_generatedTable!.capacity} people',
@@ -516,9 +491,14 @@ class _GenerateQRCodeState extends State<GenerateQRCode> {
                     ),
                     const SizedBox(height: 8),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
                       decoration: BoxDecoration(
-                        color: _getStatusColor(_generatedTable!.tableStatus).withOpacity(0.1),
+                        color: _getStatusColor(
+                          _generatedTable!.tableStatus,
+                        ).withOpacity(0.1),
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: Text(
@@ -573,9 +553,9 @@ class _GenerateQRCodeState extends State<GenerateQRCode> {
   Widget _buildSectionHeader(String title) {
     return Text(
       title,
-      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-        fontWeight: FontWeight.bold,
-      ),
+      style: Theme.of(
+        context,
+      ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
     );
   }
 

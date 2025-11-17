@@ -14,8 +14,7 @@ class RestaurantRegistrationForm extends StatefulWidget {
   State<RestaurantRegistrationForm> createState() => RestaurantRegistrationFormState();
 }
 
-class RestaurantRegistrationFormState
-    extends State<RestaurantRegistrationForm> {
+class RestaurantRegistrationFormState extends State<RestaurantRegistrationForm> {
   final formKey = GlobalKey<FormState>();
   bool _isFetchingLocation = false;
   final uuid = const Uuid();

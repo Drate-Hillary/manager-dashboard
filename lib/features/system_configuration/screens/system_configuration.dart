@@ -1,7 +1,7 @@
 import 'package:dineswift_management/features/system_configuration/models/staff_member_model.dart';
 import 'package:dineswift_management/features/system_configuration/screens/widgets/business_rules_card.dart';
 import 'package:dineswift_management/features/system_configuration/screens/widgets/financial_system_card.dart';
-import 'package:dineswift_management/features/system_configuration/screens/widgets/restaurant_settings_card.dart';
+import 'package:dineswift_management/features/system_configuration/screens/widgets/restaurant_settings.dart';
 import 'package:dineswift_management/features/system_configuration/screens/widgets/user_management_card.dart';
 import 'package:dineswift_management/util/constants/colors.dart';
 import 'package:flutter/material.dart';
@@ -45,18 +45,18 @@ class SystemConfigurationScreen extends State<SystemConfiguration> {
       ),
       body: LayoutBuilder(
         builder: (context, constraints) {
-          // Use 1 column for small screens (e.g., phones in portrait) and 2 for larger screens.
           final crossAxisCount = constraints.maxWidth < 600 ? 1 : 2;
           return GridView.count(
             padding: const EdgeInsets.all(16.0),
             crossAxisCount: crossAxisCount,
             crossAxisSpacing: 16,
             mainAxisSpacing: 16,
+            childAspectRatio: 1.2,
             children: [
-              const RestaurantSettingsCard(),
+              const RestaurantSettings(),
               const BusinessRulesCard(),
               UserManagementCard(staff: staffList),
-              const FinancialSystemCard(), // Combines Payment/Order Records & System Health
+              const FinancialSystemCard(),
             ],
           );
         },
