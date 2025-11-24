@@ -20,6 +20,9 @@ class DineSwiftSize{
   static const double fontSizeXs = 14.0;
   static const double fontSizeMd = 16.0;
   static const double fontSizeLg = 18.0;
+  static const double fontSizeXl = 20.0;
+  static const double fontSizeXxl = 24.0;
+  static const double fontSizeXxxl = 30.0;
 
   // Button Sizes
   static const double buttonHeight = 18.0;

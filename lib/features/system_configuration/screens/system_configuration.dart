@@ -6,7 +6,6 @@ import 'package:dineswift_management/features/system_configuration/screens/widge
 import 'package:dineswift_management/util/constants/colors.dart';
 import 'package:flutter/material.dart';
 
-// --- Main System Configuration Screen Widget ---
 class SystemConfiguration extends StatefulWidget {
   const SystemConfiguration({super.key});
 
@@ -16,8 +15,6 @@ class SystemConfiguration extends StatefulWidget {
 
 class SystemConfigurationScreen extends State<SystemConfiguration> {
 
-  // --- Mock Data ---
-  // (You would fetch this data in a StatefulWidget or using a state management solution)
   final List<StaffMember> staffList = [
     StaffMember(id: 'S01', name: 'Alice M.', role: 'Manager'),
     StaffMember(id: 'S02', name: 'Bob K.', role: 'Waiter'),
@@ -28,6 +25,7 @@ class SystemConfigurationScreen extends State<SystemConfiguration> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: DineSwiftColors.whiteColor,
       appBar: AppBar(
         backgroundColor: DineSwiftColors.backgroundColor,
         leading: Icon(
@@ -41,7 +39,7 @@ class SystemConfigurationScreen extends State<SystemConfiguration> {
             Text('System Configuration'),
           ],
         ),
-        titleSpacing: 0, // To remove default title spacing
+        titleSpacing: 0,
       ),
       body: LayoutBuilder(
         builder: (context, constraints) {
@@ -51,7 +49,7 @@ class SystemConfigurationScreen extends State<SystemConfiguration> {
             crossAxisCount: crossAxisCount,
             crossAxisSpacing: 16,
             mainAxisSpacing: 16,
-            childAspectRatio: 1.2,
+            childAspectRatio: 1.7,
             children: [
               const RestaurantSettings(),
               const BusinessRulesCard(),

@@ -59,15 +59,6 @@ class FinancialSystemCard extends StatelessWidget {
             },
           ),
           const Divider(height: 1),
-          ListTile(
-            leading: const Icon(Iconsax.cpu_setting, size: 20),
-            title: const Text('System Health & Sync Status'),
-            subtitle: const Text('Monitor connectivity and data sync'),
-            trailing: const Icon(Iconsax.arrow_right_3, size: 16),
-            onTap: () {
-              /* Navigate to System Health Dashboard */
-            },
-          ),
         ],
       ),
     );

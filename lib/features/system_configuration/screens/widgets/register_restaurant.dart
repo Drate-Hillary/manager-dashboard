@@ -156,8 +156,8 @@ class RestaurantRegistrationFormState extends State<RestaurantRegistrationForm> 
 
       if (permission == LocationPermission.deniedForever) {
         Fluttertoast.showToast(
-            msg:
-                'Location permissions are permanently denied, we cannot request permissions.');
+          msg: 'Location permissions are permanently denied, we cannot request permissions.'
+        );
         return;
       }
 
@@ -321,10 +321,10 @@ class RestaurantRegistrationFormState extends State<RestaurantRegistrationForm> 
                             color: DineSwiftColors.blackColor,
                             fontSize: 16,
                           ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.all(Radius.circular(8)),
+                          border: UnderlineInputBorder(
+                            borderSide: BorderSide()
                           ),
-                          focusedBorder: OutlineInputBorder(
+                          focusedBorder: UnderlineInputBorder(
                             borderRadius: BorderRadius.all(Radius.circular(8)),
                             borderSide: BorderSide(
                               color: DineSwiftColors.infoColor,

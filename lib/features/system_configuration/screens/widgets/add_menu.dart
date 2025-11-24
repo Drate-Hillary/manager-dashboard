@@ -14,7 +14,7 @@ class Menu {
   String description;
   bool isActive;
   int version;
-  String? imageUrl; // New field for menu image
+  String? imageUrl;
   List<MenuItem> items;
 
   Menu({
@@ -39,7 +39,7 @@ class MenuItem {
   String department;
   bool isAvailable;
   int displayOrder;
-  String? imageUrl; // New field for item image
+  String? imageUrl;
 
   MenuItem({
     required this.id,
@@ -55,14 +55,15 @@ class MenuItem {
   });
 }
 
-// --- Image Picker Service ---
 class ImagePickerService {
   static final _picker = ImagePicker();
 
-  static Future<String?> pickImage({ImageSource source = ImageSource.gallery}) async {
+  static Future<String?> pickImage({
+    ImageSource source = ImageSource.gallery,
+  }) async {
     final pickedFile = await _picker.pickImage(source: source);
     if (pickedFile == null) return null;
-    
+
     if (kIsWeb) {
       return pickedFile.path;
     }
@@ -77,40 +78,44 @@ class AddMenu extends StatefulWidget {
   final uuid = const Uuid();
 
   @override
-  State<AddMenu> createState() => _AddMenuState();
+  State<AddMenu> createState() => AddMenuState();
 }
 
-class _AddMenuState extends State<AddMenu> {
-  final _formKey = GlobalKey<FormState>();
-  
-  late final TextEditingController _menuNameController;
-  late final TextEditingController _menuDescriptionController;
-  late bool _isMenuActive;
-  late List<MenuItem> _menuItems;
-  String? _menuImageUrl;
-  List<Map<String, dynamic>> _allMenus = [];
+class AddMenuState extends State<AddMenu> {
+  final formKey = GlobalKey<FormState>();
 
-  bool get _isEditing => widget.menu != null;
+  late final TextEditingController menuNameController;
+  late final TextEditingController menuDescriptionController;
+  late bool isMenuActive;
+  late List<MenuItem> menuItems;
+  String? menuImageUrl;
+  List<Map<String, dynamic>> allMenus = [];
+
+  bool get isEditing => widget.menu != null;
 
   @override
   void initState() {
     super.initState();
-    _initializeData();
-    _fetchAllMenus();
+    initializeData();
+    fetchAllMenus();
   }
 
-  void _initializeData() {
-    _menuNameController = TextEditingController(text: widget.menu?.name ?? '');
-    _menuDescriptionController = TextEditingController(text: widget.menu?.description ?? '');
-    _isMenuActive = widget.menu?.isActive ?? true;
-    _menuImageUrl = widget.menu?.imageUrl;
-    _menuItems = List<MenuItem>.from(widget.menu?.items ?? []);
+  void initializeData() {
+    menuNameController = TextEditingController(text: widget.menu?.name ?? '');
+    menuDescriptionController = TextEditingController(
+      text: widget.menu?.description ?? '',
+    );
+    isMenuActive = widget.menu?.isActive ?? true;
+    menuImageUrl = widget.menu?.imageUrl;
+    menuItems = List<MenuItem>.from(widget.menu?.items ?? []);
   }
 
-  Future<void> _fetchAllMenus() async {
+  Future<void> fetchAllMenus() async {
     try {
-      final menus = await SupabaseService.getRestaurantMenus('55c67be9-90c1-404c-a28b-8fac87dfb85c');
-      if (mounted) setState(() => _allMenus = menus);
+      final menus = await SupabaseService.getRestaurantMenus(
+        '55c67be9-90c1-404c-a28b-8fac87dfb85c',
+      );
+      if (mounted) setState(() => allMenus = menus);
     } catch (e) {
       // Handle error fetching menus
     }
@@ -118,17 +123,19 @@ class _AddMenuState extends State<AddMenu> {
 
   @override
   void dispose() {
-    _menuNameController.dispose();
-    _menuDescriptionController.dispose();
+    menuNameController.dispose();
+    menuDescriptionController.dispose();
     super.dispose();
   }
 
-  Future<void> _pickMenuImage() async {
+  Future<void> pickMenuImage() async {
     if (kIsWeb) {
-      final imageUrl = await ImagePickerService.pickImage(source: ImageSource.gallery);
+      final imageUrl = await ImagePickerService.pickImage(
+        source: ImageSource.gallery,
+      );
       if (imageUrl != null) {
         setState(() {
-          _menuImageUrl = imageUrl;
+          menuImageUrl = imageUrl;
         });
       }
     } else {
@@ -153,62 +160,62 @@ class _AddMenuState extends State<AddMenu> {
           ),
         ),
       );
-      
+
       if (source != null) {
         final imageUrl = await ImagePickerService.pickImage(source: source);
         if (imageUrl != null) {
           setState(() {
-            _menuImageUrl = imageUrl;
+            menuImageUrl = imageUrl;
           });
         }
       }
     }
   }
 
-  void _removeMenuImage() {
+  void removeMenuImage() {
     setState(() {
-      _menuImageUrl = null;
+      menuImageUrl = null;
     });
   }
 
-  void _onReorder(int oldIndex, int newIndex) {
+  void onReorder(int oldIndex, int newIndex) {
     setState(() {
       if (newIndex > oldIndex) newIndex -= 1;
-      final MenuItem item = _menuItems.removeAt(oldIndex);
-      _menuItems.insert(newIndex, item);
-      
-      // Update displayOrder based on the new list index
-      for (int i = 0; i < _menuItems.length; i++) {
-        _menuItems[i].displayOrder = i;
+      final MenuItem item = menuItems.removeAt(oldIndex);
+      menuItems.insert(newIndex, item);
+
+      for (int i = 0; i < menuItems.length; i++) {
+        menuItems[i].displayOrder = i;
       }
     });
   }
 
-  void _deleteMenuItem(int index) {
+  void deleteMenuItem(int index) {
     setState(() {
-      _menuItems.removeAt(index);
-      // Optional: update displayOrder for remaining items
-      for (int i = 0; i < _menuItems.length; i++) {
-        _menuItems[i].displayOrder = i;
+      menuItems.removeAt(index);
+      for (int i = 0; i < menuItems.length; i++) {
+        menuItems[i].displayOrder = i;
       }
     });
   }
 
-  void _showMenuItemModal({MenuItem? itemToEdit}) {
+  void showMenuItemModal({MenuItem? itemToEdit}) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       builder: (context) => MenuItemEditorModal(
         item: itemToEdit,
-        menus: _allMenus,
+        menus: allMenus,
         onSave: (editedItem) {
           setState(() {
             if (itemToEdit == null) {
-              editedItem.displayOrder = _menuItems.length;
-              _menuItems.add(editedItem);
+              editedItem.displayOrder = menuItems.length;
+              menuItems.add(editedItem);
             } else {
-              final index = _menuItems.indexWhere((item) => item.id == editedItem.id);
-              if (index != -1) _menuItems[index] = editedItem;
+              final index = menuItems.indexWhere(
+                (item) => item.id == editedItem.id,
+              );
+              if (index != -1) menuItems[index] = editedItem;
             }
           });
           Navigator.pop(context);
@@ -216,16 +223,16 @@ class _AddMenuState extends State<AddMenu> {
       ),
     );
   }
-  
-  Future<void> _saveMenu() async {
-    if (_formKey.currentState!.validate()) {
+
+  Future<void> saveMenu() async {
+    if (formKey.currentState!.validate()) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           backgroundColor: DineSwiftColors.lightSuccessColor,
           duration: Duration(seconds: 30),
           content: Text(
             'Saving menu...',
-            style: TextStyle(color: DineSwiftColors.successColor)
+            style: TextStyle(color: DineSwiftColors.successColor),
           ),
           showCloseIcon: true,
           closeIconColor: DineSwiftColors.successColor,
@@ -234,31 +241,38 @@ class _AddMenuState extends State<AddMenu> {
       );
 
       final menuData = {
-        'id': _isEditing ? widget.menu!.id : widget.uuid.v4(),
-        'restaurant_id': '55c67be9-90c1-404c-a28b-8fac87dfb85c', // Hardcoded restaurant ID
-        'name': _menuNameController.text,
-        'description': _menuDescriptionController.text,
-        'is_active': _isMenuActive,
-        'version': _isEditing ? widget.menu!.version + 1 : 1,
+        'id': isEditing ? widget.menu!.id : widget.uuid.v4(),
+        'restaurant_id':
+            '55c67be9-90c1-404c-a28b-8fac87dfb85c', // Hardcoded restaurant ID
+        'name': menuNameController.text,
+        'description': menuDescriptionController.text,
+        'is_active': isMenuActive,
+        'version': isEditing ? widget.menu!.version + 1 : 1,
         'created_at': DateTime.now().toIso8601String(),
         'updated_at': DateTime.now().toIso8601String(),
-        if (_menuImageUrl != null) 'menu_image': _menuImageUrl,
+        if (menuImageUrl != null) 'menu_image': menuImageUrl,
       };
 
-      final items = _menuItems.map((item) => {
-        'id': item.id.startsWith('new-item-id-') ? widget.uuid.v4() : item.id,
-        'menu_id': item.menuId,
-        'item_name': item.itemName,
-        'description': item.description,
-        'sales_price': item.salesPrice,
-        'preparation_time': item.preparationTime,
-        'department': item.department,
-        'is_available': item.isAvailable,
-        'display_order': item.displayOrder,
-        'created_at': DateTime.now().toIso8601String(),
-        'updated_at': DateTime.now().toIso8601String(),
-        if (item.imageUrl != null) 'menu_item_image': item.imageUrl,
-      }).toList();
+      final items = menuItems
+          .map(
+            (item) => {
+              'id': item.id.startsWith('new-item-id-')
+                  ? widget.uuid.v4()
+                  : item.id,
+              'menu_id': item.menuId,
+              'item_name': item.itemName,
+              'description': item.description,
+              'sales_price': item.salesPrice,
+              'preparation_time': item.preparationTime,
+              'department': item.department,
+              'is_available': item.isAvailable,
+              'display_order': item.displayOrder,
+              'created_at': DateTime.now().toIso8601String(),
+              'updated_at': DateTime.now().toIso8601String(),
+              if (item.imageUrl != null) 'menu_item_image': item.imageUrl,
+            },
+          )
+          .toList();
 
       try {
         await SupabaseService.saveMenu(menuData, items);
@@ -267,7 +281,7 @@ class _AddMenuState extends State<AddMenu> {
             const SnackBar(
               content: Text(
                 'Menu saved successfully!',
-                style: TextStyle(color: DineSwiftColors.successColor)
+                style: TextStyle(color: DineSwiftColors.successColor),
               ),
               backgroundColor: DineSwiftColors.lightSuccessColor,
             ),
@@ -277,10 +291,7 @@ class _AddMenuState extends State<AddMenu> {
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Error: $e'),
-              backgroundColor: Colors.red,
-            ),
+            SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
           );
         }
       }
@@ -297,15 +308,15 @@ class _AddMenuState extends State<AddMenu> {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(12),
-        child:  Scaffold(
+        child: Scaffold(
           appBar: AppBar(
             backgroundColor: DineSwiftColors.primaryColor,
             title: Text(
-              _isEditing ? 'Edit: ${widget.menu!.name}' : 'Add New Menu',
+              isEditing ? 'Edit: ${widget.menu!.name}' : 'Add New Menu',
               style: TextStyle(
                 color: DineSwiftColors.whiteColor,
                 fontSize: 20,
-                fontWeight: FontWeight.w600
+                fontWeight: FontWeight.w600,
               ),
             ),
             actions: [
@@ -316,61 +327,61 @@ class _AddMenuState extends State<AddMenu> {
                   color: DineSwiftColors.whiteColor,
                 ),
                 tooltip: 'Add New Item',
-                onPressed: () => _showMenuItemModal(),
+                onPressed: () => showMenuItemModal(),
               ),
             ],
           ),
           body: Form(
-            key: _formKey,
+            key: formKey,
             child: Column(
               children: [
                 Expanded(
                   child: CustomScrollView(
                     slivers: [
                       // Section 1: Menu Details
-                      _buildMenuDetailsSection(),
+                      buildMenuDetailsSection(),
 
                       // Section 2: Menu Items
-                      _buildMenuItemsHeader(),
+                      buildMenuItemsHeader(),
 
                       // If empty, show a message, otherwise show the list
-                      if (_menuItems.isEmpty) 
-                        _buildEmptyItemsState()
+                      if (menuItems.isEmpty)
+                        buildEmptyItemsState()
                       else
                         MenuItemsList(
-                          items: _menuItems,
-                          onReorder: _onReorder,
-                          onEdit: (item) => _showMenuItemModal(itemToEdit: item),
-                          onDelete: _deleteMenuItem,
+                          items: menuItems,
+                          onReorder: onReorder,
+                          onEdit: (item) => showMenuItemModal(itemToEdit: item),
+                          onDelete: deleteMenuItem,
                         ),
                     ],
                   ),
                 ),
 
                 // Save Button
-                _buildSaveButton(),
+                buildSaveButton(),
               ],
             ),
           ),
         ),
-      )
+      ),
     );
   }
 
-  SliverList _buildMenuDetailsSection() {
+  SliverList buildMenuDetailsSection() {
     return SliverList(
       delegate: SliverChildListDelegate([
-        _buildSectionHeader('Menu Details'),
+        buildSectionHeader('Menu Details'),
         Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
             children: [
               // Menu Image Section
-              _buildMenuImageSection(),
+              buildMenuImageSection(),
               const SizedBox(height: 20),
-              
+
               // Menu Form Fields
-              _buildMenuFormFields(),
+              buildMenuFormFields(),
             ],
           ),
         ),
@@ -378,15 +389,15 @@ class _AddMenuState extends State<AddMenu> {
     );
   }
 
-  Widget _buildMenuImageSection() {
+  Widget buildMenuImageSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           'Menu Image',
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 8),
         Container(
@@ -396,17 +407,17 @@ class _AddMenuState extends State<AddMenu> {
             border: Border.all(color: Colors.grey.shade300),
             borderRadius: BorderRadius.circular(12),
           ),
-          child: _menuImageUrl == null
-            ? _buildImagePlaceholder()
-            : _buildImagePreview(),
+          child: menuImageUrl == null
+              ? buildImagePlaceholder()
+              : buildImagePreview(),
         ),
       ],
     );
   }
 
-  Widget _buildImagePlaceholder() {
+  Widget buildImagePlaceholder() {
     return InkWell(
-      onTap: _pickMenuImage,
+      onTap: pickMenuImage,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -421,13 +432,13 @@ class _AddMenuState extends State<AddMenu> {
     );
   }
 
-  Widget _buildImagePreview() {
+  Widget buildImagePreview() {
     return Stack(
       children: [
         ClipRRect(
           borderRadius: BorderRadius.circular(12.0),
-          child: _buildImageWidget(
-            _menuImageUrl!,
+          child: buildImageWidget(
+            menuImageUrl!,
             width: double.infinity,
             height: 200,
             fit: BoxFit.cover,
@@ -440,7 +451,7 @@ class _AddMenuState extends State<AddMenu> {
             backgroundColor: Colors.black54,
             child: IconButton(
               icon: const Icon(Icons.close, color: Colors.white, size: 20),
-              onPressed: _removeMenuImage,
+              onPressed: removeMenuImage,
             ),
           ),
         ),
@@ -448,11 +459,11 @@ class _AddMenuState extends State<AddMenu> {
     );
   }
 
-  Column _buildMenuFormFields() {
+  Column buildMenuFormFields() {
     return Column(
       children: [
         TextFormField(
-          controller: _menuNameController,
+          controller: menuNameController,
           decoration: const InputDecoration(
             labelText: 'Menu Name',
             labelStyle: TextStyle(
@@ -462,7 +473,7 @@ class _AddMenuState extends State<AddMenu> {
             ),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.all(Radius.circular(8)),
-              borderSide: BorderSide(color: DineSwiftColors.darkGrey)
+              borderSide: BorderSide(color: DineSwiftColors.darkGrey),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.all(Radius.circular(8)),
@@ -473,11 +484,12 @@ class _AddMenuState extends State<AddMenu> {
             ),
             prefixIcon: Icon(Iconsax.receipt),
           ),
-          validator: (value) => value == null || value.isEmpty ? 'Please enter a name' : null,
+          validator: (value) =>
+              value == null || value.isEmpty ? 'Please enter a name' : null,
         ),
         const SizedBox(height: 10),
         TextFormField(
-          controller: _menuDescriptionController,
+          controller: menuDescriptionController,
           decoration: const InputDecoration(
             labelText: 'Description',
             labelStyle: TextStyle(
@@ -487,7 +499,7 @@ class _AddMenuState extends State<AddMenu> {
             ),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.all(Radius.circular(8)),
-              borderSide: BorderSide(color: DineSwiftColors.darkGrey)
+              borderSide: BorderSide(color: DineSwiftColors.darkGrey),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.all(Radius.circular(8)),
@@ -500,44 +512,72 @@ class _AddMenuState extends State<AddMenu> {
           ),
           maxLines: 3,
         ),
-        const SizedBox(height: 10),
-        SwitchListTile(
-          contentPadding: EdgeInsets.zero,
-          title: const Text('Menu is Active'),
-          subtitle: const Text('If active, the menu will be visible to customers.'),
-          value: _isMenuActive,
-          onChanged: (bool value) => setState(() => _isMenuActive = value),
+        const SizedBox(height: 6),
+
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: const [
+                Text(
+                  'Menu is Active',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w500,
+                    color: DineSwiftColors.blackColor,
+                    fontSize: 16,
+                  ),
+                ),
+                Text(
+                  'If active, the menu will be visible to customers.',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: DineSwiftColors.darkGrey,
+                  ),
+                ),
+              ],
+            ),
+            Transform.scale(
+              scale: 0.6, 
+              child: Switch(
+                value: isMenuActive,
+                onChanged: (val) => setState(() => isMenuActive = val),
+                activeThumbColor: DineSwiftColors.infoColor,
+                inactiveThumbColor: DineSwiftColors.blackColor,
+                activeTrackColor: DineSwiftColors.infoColor.withAlpha(100),
+                inactiveTrackColor: DineSwiftColors.softGrey,
+              ),
+            ),
+          ],
         ),
         const Divider(height: 20),
       ],
     );
   }
 
-  SliverList _buildMenuItemsHeader() {
+  SliverList buildMenuItemsHeader() {
     return SliverList(
-      delegate: SliverChildListDelegate([
-        _buildSectionHeader('Menu Items'),
-      ]),
+      delegate: SliverChildListDelegate([buildSectionHeader('Menu Items')]),
     );
   }
 
-  SliverFillRemaining _buildEmptyItemsState() {
+  SliverFillRemaining buildEmptyItemsState() {
     return SliverFillRemaining(
       hasScrollBody: false,
       child: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.fastfood_outlined, size: 64, color: Colors.grey),
+            Icon(Icons.fastfood_outlined, size: 64, color: DineSwiftColors.darkGrey),
             SizedBox(height: 16),
             Text(
               'No items added yet',
-              style: TextStyle(fontSize: 16, color: Colors.grey),
+              style: TextStyle(fontSize: 16, color: DineSwiftColors.blackColor),
             ),
             SizedBox(height: 8),
             Text(
               'Tap the + button to add your first item',
-              style: TextStyle(color: Colors.grey),
+              style: TextStyle(color: DineSwiftColors.darkGrey),
             ),
           ],
         ),
@@ -545,48 +585,48 @@ class _AddMenuState extends State<AddMenu> {
     );
   }
 
-  Widget _buildSectionHeader(String title) {
+  Widget buildSectionHeader(String title) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
       child: Text(
         title,
-        style: TextStyle(
-          color: DineSwiftColors.blackColor,
-          fontSize: 20
-        )
+        style: TextStyle(color: DineSwiftColors.blackColor, fontSize: 20),
       ),
     );
   }
 
-  Widget _buildSaveButton() {
+  Widget buildSaveButton() {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: SizedBox(
           width: 200,
           child: ElevatedButton.icon(
-            onPressed: _saveMenu,
+            onPressed: saveMenu,
             style: ElevatedButton.styleFrom(
               backgroundColor: DineSwiftColors.primaryColor,
             ),
-            icon: const Icon(
-              Iconsax.save_2,
-              color: DineSwiftColors.whiteColor),
+            icon: const Icon(Iconsax.save_2, color: DineSwiftColors.whiteColor),
             label: const Text(
               'Save Item',
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w500,
-                color: DineSwiftColors.whiteColor
+                color: DineSwiftColors.whiteColor,
               ),
             ),
           ),
         ),
-      )
+      ),
     );
   }
 
-  Widget _buildImageWidget(String imagePath, {double? width, double? height, BoxFit? fit}) {
+  Widget buildImageWidget(
+    String imagePath, {
+    double? width,
+    double? height,
+    BoxFit? fit,
+  }) {
     if (imagePath.startsWith('http') || kIsWeb) {
       return Image.network(
         imagePath,
@@ -623,6 +663,9 @@ class MenuItemsList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    int alpha = (0.2 * 255).round();
+    int beta = (0.1 * 255).round();
+
     return SliverReorderableList(
       itemCount: items.length,
       itemBuilder: (context, index) {
@@ -632,26 +675,39 @@ class MenuItemsList extends StatelessWidget {
           color: DineSwiftColors.whiteColor,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8),
-            side: const BorderSide(color: DineSwiftColors.primaryColor, width: 0.5),
+            side: const BorderSide(
+              color: DineSwiftColors.primaryColor,
+              width: 0.5,
+            ),
           ),
           margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
           child: ListTile(
-            leading: _buildItemLeading(item),
-            title: Text(item.itemName, style: TextStyle(color: DineSwiftColors.iconColor, fontSize: 16, fontWeight: FontWeight.w600),),
+            leading: buildItemLeading(item),
+            title: Text(
+              item.itemName,
+              style: TextStyle(
+                color: DineSwiftColors.iconColor,
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
             subtitle: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   'UgX ${item.salesPrice.toStringAsFixed(2)}',
                   style: const TextStyle(
-                    fontSize: 14, 
-                    color: DineSwiftColors.blackColor
-                  )
+                    fontSize: 14,
+                    color: DineSwiftColors.blackColor,
+                  ),
                 ),
                 if (item.description.isNotEmpty)
                   Text(
                     item.description,
-                    style: TextStyle(fontSize: 12, color: DineSwiftColors.darkGrey),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: DineSwiftColors.darkGrey,
+                    ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -661,22 +717,22 @@ class MenuItemsList extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 IconButton(
-                  hoverColor: DineSwiftColors.infoColor.withOpacity(0.1),
+                  hoverColor: DineSwiftColors.infoColor.withAlpha(beta),
                   icon: const Icon(
-                    Iconsax.edit, 
+                    Iconsax.edit,
                     color: DineSwiftColors.infoColor,
                     size: 20,
                   ),
                   onPressed: () => onEdit(item),
                 ),
                 IconButton(
-                  hoverColor: DineSwiftColors.errorColor.withOpacity(0.1),
+                  hoverColor: DineSwiftColors.errorColor.withAlpha(beta),
                   icon: const Icon(
-                    Iconsax.trash, 
+                    Iconsax.trash,
                     color: DineSwiftColors.errorColor,
                     size: 20,
                   ),
-                  onPressed: () => _showDeleteConfirmation(context, index),
+                  onPressed: () => showDeleteConfirmation(context, index),
                 ),
               ],
             ),
@@ -687,7 +743,7 @@ class MenuItemsList extends StatelessWidget {
     );
   }
 
-  Widget _buildItemLeading(MenuItem item) {
+  Widget buildItemLeading(MenuItem item) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -695,11 +751,11 @@ class MenuItemsList extends StatelessWidget {
           CircleAvatar(
             radius: 20,
             child: CircleAvatar(
-              child: _buildImageWidget(
-                item.imageUrl!, 
-                width: 40, 
-                height: 40, 
-                fit: BoxFit.cover
+              child: buildImageWidget(
+                item.imageUrl!,
+                width: 40,
+                height: 40,
+                fit: BoxFit.cover,
               ),
             ),
           )
@@ -708,12 +764,17 @@ class MenuItemsList extends StatelessWidget {
             backgroundColor: Colors.grey.shade200,
             radius: 20,
             child: const Icon(Icons.fastfood, size: 20, color: Colors.grey),
-          )
+          ),
       ],
     );
   }
 
-  Widget _buildImageWidget(String imagePath, {double? width, double? height, BoxFit? fit}) {
+  Widget buildImageWidget(
+    String imagePath, {
+    double? width,
+    double? height,
+    BoxFit? fit,
+  }) {
     if (imagePath.startsWith('http') || kIsWeb) {
       return Image.network(
         imagePath,
@@ -732,7 +793,9 @@ class MenuItemsList extends StatelessWidget {
     );
   }
 
-  void _showDeleteConfirmation(BuildContext context, int index) {
+  void showDeleteConfirmation(BuildContext context, int index) {
+    int alpha = (0.2 * 255).round();
+    int beta = (0.1 * 255).round();
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -747,39 +810,37 @@ class MenuItemsList extends StatelessWidget {
           style: TextStyle(
             fontWeight: FontWeight.w500,
             color: DineSwiftColors.errorColor,
-            fontSize: 20
-          )
+            fontSize: 20,
+          ),
         ),
         content: const Text(
           'Are you sure you want to delete this menu item?',
-          style: TextStyle(
-            fontSize: 17,
-            color: DineSwiftColors.blackColor
-          ),
+          style: TextStyle(fontSize: 17, color: DineSwiftColors.blackColor),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
             style: TextButton.styleFrom(
-              backgroundColor: DineSwiftColors.softGrey.withOpacity(0.2),
+              backgroundColor: DineSwiftColors.softGrey.withAlpha(alpha),
               foregroundColor: DineSwiftColors.blackColor,
             ),
             child: const Text(
               'Cancel',
-              style: TextStyle(color: DineSwiftColors.blackColor)
+              style: TextStyle(color: DineSwiftColors.blackColor),
             ),
           ),
           TextButton(
             style: TextButton.styleFrom(
-              backgroundColor: DineSwiftColors.errorColor.withOpacity(0.1),
+              backgroundColor: DineSwiftColors.errorColor.withAlpha(beta),
               foregroundColor: DineSwiftColors.errorColor,
             ),
             onPressed: () {
               onDelete(index);
               Navigator.pop(context);
             },
-            child: const Text('Delete',
-              style: TextStyle(color: DineSwiftColors.errorColor)
+            child: const Text(
+              'Delete',
+              style: TextStyle(color: DineSwiftColors.errorColor),
             ),
           ),
         ],
@@ -793,59 +854,74 @@ class MenuItemEditorModal extends StatefulWidget {
   final MenuItem? item;
   final Function(MenuItem) onSave;
   final List<Map<String, dynamic>> menus;
-  const MenuItemEditorModal({super.key, this.item, required this.onSave, required this.menus});
+  const MenuItemEditorModal({
+    super.key,
+    this.item,
+    required this.onSave,
+    required this.menus,
+  });
 
   @override
-  State<MenuItemEditorModal> createState() => _MenuItemEditorModalState();
+  State<MenuItemEditorModal> createState() => MenuItemEditorModalState();
 }
 
-class _MenuItemEditorModalState extends State<MenuItemEditorModal> {
-  final _formKey = GlobalKey<FormState>();
-  
-  late final TextEditingController _nameController;
-  late final TextEditingController _descriptionController;
-  late final TextEditingController _priceController;
-  late final TextEditingController _prepTimeController;
-  late final TextEditingController _departmentController;
-  late bool _isAvailable;
-  String? _itemImageUrl;
-  String? _selectedMenuId;
+class MenuItemEditorModalState extends State<MenuItemEditorModal> {
+  final formKey = GlobalKey<FormState>();
 
-  bool get _isEditing => widget.item != null;
+  late final TextEditingController nameController;
+  late final TextEditingController descriptionController;
+  late final TextEditingController priceController;
+  late final TextEditingController prepTimeController;
+  late final TextEditingController departmentController;
+  late bool isAvailable;
+  String? itemImageUrl;
+  String? selectedMenuId;
+
+  bool get isEditing => widget.item != null;
 
   @override
   void initState() {
     super.initState();
-    _initializeData();
+    initializeData();
   }
 
-  void _initializeData() {
-    _nameController = TextEditingController(text: widget.item?.itemName ?? '');
-    _descriptionController = TextEditingController(text: widget.item?.description ?? '');
-    _priceController = TextEditingController(text: widget.item?.salesPrice.toString() ?? '');
-    _prepTimeController = TextEditingController(text: widget.item?.preparationTime.toString() ?? '');
-    _departmentController = TextEditingController(text: widget.item?.department ?? 'Kitchen');
-    _isAvailable = widget.item?.isAvailable ?? true;
-    _itemImageUrl = widget.item?.imageUrl;
-    _selectedMenuId = widget.item?.menuId;
+  void initializeData() {
+    nameController = TextEditingController(text: widget.item?.itemName ?? '');
+    descriptionController = TextEditingController(
+      text: widget.item?.description ?? '',
+    );
+    priceController = TextEditingController(
+      text: widget.item?.salesPrice.toString() ?? '',
+    );
+    prepTimeController = TextEditingController(
+      text: widget.item?.preparationTime.toString() ?? '',
+    );
+    departmentController = TextEditingController(
+      text: widget.item?.department ?? 'Kitchen',
+    );
+    isAvailable = widget.item?.isAvailable ?? true;
+    itemImageUrl = widget.item?.imageUrl;
+    selectedMenuId = widget.item?.menuId;
   }
 
   @override
   void dispose() {
-    _nameController.dispose();
-    _descriptionController.dispose();
-    _priceController.dispose();
-    _prepTimeController.dispose();
-    _departmentController.dispose();
+    nameController.dispose();
+    descriptionController.dispose();
+    priceController.dispose();
+    prepTimeController.dispose();
+    departmentController.dispose();
     super.dispose();
   }
 
-  Future<void> _pickItemImage() async {
+  Future<void> pickItemImage() async {
     if (kIsWeb) {
-      final imageUrl = await ImagePickerService.pickImage(source: ImageSource.gallery);
+      final imageUrl = await ImagePickerService.pickImage(
+        source: ImageSource.gallery,
+      );
       if (imageUrl != null) {
         setState(() {
-          _itemImageUrl = imageUrl;
+          itemImageUrl = imageUrl;
         });
       }
     } else {
@@ -870,37 +946,39 @@ class _MenuItemEditorModalState extends State<MenuItemEditorModal> {
           ),
         ),
       );
-      
+
       if (source != null) {
         final imageUrl = await ImagePickerService.pickImage(source: source);
         if (imageUrl != null) {
           setState(() {
-            _itemImageUrl = imageUrl;
+            itemImageUrl = imageUrl;
           });
         }
       }
     }
   }
 
-  void _removeItemImage() {
+  void removeItemImage() {
     setState(() {
-      _itemImageUrl = null;
+      itemImageUrl = null;
     });
   }
 
-  void _saveItem() {
-    if (_formKey.currentState!.validate()) {
+  void saveItem() {
+    if (formKey.currentState!.validate()) {
       final newItem = MenuItem(
-        id: widget.item?.id ?? 'new-item-id-${DateTime.now().millisecondsSinceEpoch}',
-        menuId: _selectedMenuId ?? '',
-        itemName: _nameController.text,
-        description: _descriptionController.text,
-        salesPrice: double.tryParse(_priceController.text) ?? 0.0,
-        preparationTime: int.tryParse(_prepTimeController.text) ?? 0,
-        department: _departmentController.text,
-        isAvailable: _isAvailable,
+        id:
+            widget.item?.id ??
+            'new-item-id-${DateTime.now().millisecondsSinceEpoch}',
+        menuId: selectedMenuId ?? '',
+        itemName: nameController.text,
+        description: descriptionController.text,
+        salesPrice: double.tryParse(priceController.text) ?? 0.0,
+        preparationTime: int.tryParse(prepTimeController.text) ?? 0,
+        department: departmentController.text,
+        isAvailable: isAvailable,
         displayOrder: widget.item?.displayOrder ?? 0,
-        imageUrl: _itemImageUrl,
+        imageUrl: itemImageUrl,
       );
       widget.onSave(newItem);
     }
@@ -913,10 +991,15 @@ class _MenuItemEditorModalState extends State<MenuItemEditorModal> {
         borderRadius: BorderRadius.circular(12),
         color: DineSwiftColors.whiteColor,
       ),
-      padding: EdgeInsets.fromLTRB(16, 16, 16, 16 + MediaQuery.of(context).viewInsets.bottom),
+      padding: EdgeInsets.fromLTRB(
+        16,
+        16,
+        16,
+        16 + MediaQuery.of(context).viewInsets.bottom,
+      ),
       child: SingleChildScrollView(
         child: Form(
-          key: _formKey,
+          key: formKey,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
@@ -924,10 +1007,10 @@ class _MenuItemEditorModalState extends State<MenuItemEditorModal> {
               // Header
               Row(
                 children: [
-                  Icon(_isEditing ? Iconsax.pen_add : Iconsax.add, size: 24),
+                  Icon(isEditing ? Iconsax.pen_add : Iconsax.add, size: 24),
                   const SizedBox(width: 8),
                   Text(
-                    _isEditing ? 'Edit Item' : 'Add New Item',
+                    isEditing ? 'Edit Item' : 'Add New Item',
                     style: TextStyle(
                       color: DineSwiftColors.blackColor,
                       fontSize: 20,
@@ -938,11 +1021,11 @@ class _MenuItemEditorModalState extends State<MenuItemEditorModal> {
               const SizedBox(height: 20),
 
               // Item Image
-              _buildItemImageSection(),
+              buildItemImageSection(),
               const SizedBox(height: 20),
 
               // Form Fields
-              _buildFormFields(),
+              buildFormFields(),
               const SizedBox(height: 16),
 
               // Save Button
@@ -950,19 +1033,20 @@ class _MenuItemEditorModalState extends State<MenuItemEditorModal> {
                 child: SizedBox(
                   width: 200,
                   child: ElevatedButton.icon(
-                    onPressed: _saveItem,
+                    onPressed: saveItem,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: DineSwiftColors.primaryColor,
                     ),
                     icon: const Icon(
                       Iconsax.save_2,
-                      color: DineSwiftColors.whiteColor),
+                      color: DineSwiftColors.whiteColor,
+                    ),
                     label: const Text(
                       'Save Item',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w500,
-                        color: DineSwiftColors.whiteColor
+                        color: DineSwiftColors.whiteColor,
                       ),
                     ),
                   ),
@@ -975,7 +1059,7 @@ class _MenuItemEditorModalState extends State<MenuItemEditorModal> {
     );
   }
 
-  Widget _buildItemImageSection() {
+  Widget buildItemImageSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -984,7 +1068,7 @@ class _MenuItemEditorModalState extends State<MenuItemEditorModal> {
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w500,
-            color: DineSwiftColors.blackColor
+            color: DineSwiftColors.blackColor,
           ),
         ),
         Container(
@@ -994,17 +1078,17 @@ class _MenuItemEditorModalState extends State<MenuItemEditorModal> {
             border: Border.all(color: Colors.grey.shade300),
             borderRadius: BorderRadius.circular(8),
           ),
-          child: _itemImageUrl == null
-            ? _buildItemImagePlaceholder()
-            : _buildItemImagePreview(),
+          child: itemImageUrl == null
+              ? buildItemImagePlaceholder()
+              : buildItemImagePreview(),
         ),
       ],
     );
   }
 
-  Widget _buildItemImagePlaceholder() {
+  Widget buildItemImagePlaceholder() {
     return InkWell(
-      onTap: _pickItemImage,
+      onTap: pickItemImage,
       borderRadius: BorderRadius.circular(12),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -1020,13 +1104,13 @@ class _MenuItemEditorModalState extends State<MenuItemEditorModal> {
     );
   }
 
-  Widget _buildItemImagePreview() {
+  Widget buildItemImagePreview() {
     return Stack(
       children: [
         ClipRRect(
           borderRadius: BorderRadius.circular(12.0),
-          child: _buildImageWidget(
-            _itemImageUrl!,
+          child: buildImageWidget(
+            itemImageUrl!,
             width: 150,
             height: 150,
             fit: BoxFit.cover,
@@ -1039,8 +1123,12 @@ class _MenuItemEditorModalState extends State<MenuItemEditorModal> {
             radius: 12,
             backgroundColor: Colors.black54,
             child: IconButton(
-              icon: const Icon(Icons.close, size: 12, color: DineSwiftColors.whiteColor),
-              onPressed: _removeItemImage,
+              icon: const Icon(
+                Icons.close,
+                size: 12,
+                color: DineSwiftColors.whiteColor,
+              ),
+              onPressed: removeItemImage,
               padding: EdgeInsets.zero,
             ),
           ),
@@ -1049,7 +1137,12 @@ class _MenuItemEditorModalState extends State<MenuItemEditorModal> {
     );
   }
 
-  Widget _buildImageWidget(String imagePath, {double? width, double? height, BoxFit? fit}) {
+  Widget buildImageWidget(
+    String imagePath, {
+    double? width,
+    double? height,
+    BoxFit? fit,
+  }) {
     if (imagePath.startsWith('http') || kIsWeb) {
       return Image.network(
         imagePath,
@@ -1068,11 +1161,14 @@ class _MenuItemEditorModalState extends State<MenuItemEditorModal> {
     );
   }
 
-  Column _buildFormFields() {
+  Column buildFormFields() {
+    int alpha = (0.2 * 255).round();
+    int beta = (0.1 * 255).round();
+    int alphaBeta = (0.5 * 255).round();
     return Column(
       children: [
         TextFormField(
-          controller: _nameController,
+          controller: nameController,
           decoration: const InputDecoration(
             labelText: 'Item Name',
             labelStyle: TextStyle(
@@ -1081,7 +1177,7 @@ class _MenuItemEditorModalState extends State<MenuItemEditorModal> {
               fontSize: 14,
             ),
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.all(Radius.circular(4))
+              borderRadius: BorderRadius.all(Radius.circular(4)),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.all(Radius.circular(8)),
@@ -1096,7 +1192,7 @@ class _MenuItemEditorModalState extends State<MenuItemEditorModal> {
         ),
         const SizedBox(height: 10),
         TextFormField(
-          controller: _descriptionController,
+          controller: descriptionController,
           decoration: const InputDecoration(
             labelText: 'Item Description',
             labelStyle: TextStyle(
@@ -1105,7 +1201,7 @@ class _MenuItemEditorModalState extends State<MenuItemEditorModal> {
               fontSize: 14,
             ),
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.all(Radius.circular(4))
+              borderRadius: BorderRadius.all(Radius.circular(4)),
             ),
             prefixIcon: Icon(Iconsax.document_text),
             focusedBorder: OutlineInputBorder(
@@ -1123,7 +1219,7 @@ class _MenuItemEditorModalState extends State<MenuItemEditorModal> {
           children: [
             Expanded(
               child: TextFormField(
-                controller: _priceController,
+                controller: priceController,
                 decoration: const InputDecoration(
                   labelText: 'Price',
                   labelStyle: TextStyle(
@@ -1132,7 +1228,7 @@ class _MenuItemEditorModalState extends State<MenuItemEditorModal> {
                     fontSize: 14,
                   ),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(4))
+                    borderRadius: BorderRadius.all(Radius.circular(4)),
                   ),
                   prefixIcon: Icon(Iconsax.money),
                   focusedBorder: OutlineInputBorder(
@@ -1143,14 +1239,17 @@ class _MenuItemEditorModalState extends State<MenuItemEditorModal> {
                     ),
                   ),
                 ),
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                validator: (value) => (value?.isEmpty ?? true) ? 'Required' : null,
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                validator: (value) =>
+                    (value?.isEmpty ?? true) ? 'Required' : null,
               ),
             ),
             const SizedBox(width: 10),
             Expanded(
               child: TextFormField(
-                controller: _prepTimeController,
+                controller: prepTimeController,
                 decoration: const InputDecoration(
                   labelText: 'Prep Time',
                   labelStyle: TextStyle(
@@ -1159,7 +1258,7 @@ class _MenuItemEditorModalState extends State<MenuItemEditorModal> {
                     fontSize: 14,
                   ),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(4))
+                    borderRadius: BorderRadius.all(Radius.circular(4)),
                   ),
                   suffixText: 'min',
                   prefixIcon: Icon(Iconsax.clock),
@@ -1178,7 +1277,7 @@ class _MenuItemEditorModalState extends State<MenuItemEditorModal> {
         ),
         const SizedBox(height: 10),
         TextFormField(
-          controller: _departmentController,
+          controller: departmentController,
           decoration: const InputDecoration(
             labelText: 'Department',
             labelStyle: TextStyle(
@@ -1186,9 +1285,8 @@ class _MenuItemEditorModalState extends State<MenuItemEditorModal> {
               color: DineSwiftColors.blackColor,
               fontSize: 14,
             ),
-            hintText: 'e.g., Grill, Bar',
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.all(Radius.circular(4))
+              borderRadius: BorderRadius.all(Radius.circular(4)),
             ),
             prefixIcon: Icon(Iconsax.card),
             focusedBorder: OutlineInputBorder(
@@ -1202,24 +1300,36 @@ class _MenuItemEditorModalState extends State<MenuItemEditorModal> {
         ),
         const SizedBox(height: 14),
         Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
           decoration: BoxDecoration(
-            color: DineSwiftColors.softGrey.withOpacity(0.1),
+            color: DineSwiftColors.softGrey.withAlpha(beta),
             borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: DineSwiftColors.softGrey.withAlpha(alphaBeta)),
           ),
-          child: SwitchListTile(
-            thumbColor: MaterialStateProperty.all(DineSwiftColors.primaryColor),
-            activeTrackColor: DineSwiftColors.primaryColor.withOpacity(0.2),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 12.0),
-            title: const Text(
-              'Is Available',
-              style: TextStyle(
-                fontWeight: FontWeight.w500,
-                color: DineSwiftColors.blackColor,
-                fontSize: 16,
+
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Is Available',
+                style: TextStyle(
+                  fontWeight: FontWeight.w500,
+                  color: DineSwiftColors.blackColor,
+                  fontSize: 16,
+                ),
               ),
-            ),
-            value: _isAvailable,
-            onChanged: (value) => setState(() => _isAvailable = value),
+              Transform.scale(
+                scale: 0.6, 
+                child: Switch(
+                  value: isAvailable,
+                  onChanged: (val) => setState(() => isAvailable = val),
+                  activeThumbColor: DineSwiftColors.successColor,
+                  inactiveThumbColor: DineSwiftColors.blackColor,
+                  activeTrackColor: DineSwiftColors.successColor.withAlpha(100),
+                  inactiveTrackColor: DineSwiftColors.softGrey,
+                ),
+              ),
+            ],
           ),
         ),
       ],

@@ -1,4 +1,4 @@
-import 'package:dineswift_management/features/dashboard/screens/dashboard.dart';
+import 'package:dineswift_management/features/authentication/screen/login.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -9,7 +9,7 @@ class DineSwiftApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return GetMaterialApp(
       debugShowCheckedModeBanner: false,
-      home: const DineSwiftDashboard(),
+      home: const LoginScreen(),
     );
   }
 }

@@ -10,32 +10,41 @@ class RestaurantSettings extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    
+    int alpha = (0.2 * 255).round();
     return Card(
+      shadowColor: DineSwiftColors.softGrey.withAlpha(70),
+      elevation: 8,
       color: DineSwiftColors.whiteColor,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      child: ExpansionTile(
-        leading: const Icon(
-          Iconsax.shop,
-          color: DineSwiftColors.infoColor,
-          size: 25,
-        ),
-        title: Text(
-          'Restaurant Settings',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-        ),
-        subtitle: const Text(
-          'Menu, tables, operating hours',
-          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w400),
-        ),
-        initiallyExpanded: true,
-        childrenPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 8,
-        ),
-        expandedCrossAxisAlignment: CrossAxisAlignment.start,
+      shape: RoundedRectangleBorder(
+        side: const BorderSide(color: DineSwiftColors.softGrey, width: 1),
+        borderRadius: BorderRadius.circular(8)
+      ),
+      child: Column(
         children: [
+          const ListTile(
+            leading: Icon(
+              Iconsax.shop,
+              color: DineSwiftColors.infoColor,
+              size: 25,
+            ),
+            title: Text(
+              'Restaurant Settings',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+            ),
+            subtitle: Text(
+              'Menu, tables, operating hours',
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: DineSwiftDivider(height: 1),
+          ),
+          const SizedBox(height: 8),
           ListTile(
             leading: const Icon(Iconsax.document_upload, size: 20),
+            focusColor: DineSwiftColors.softGrey.withAlpha(alpha),
             title: const Text(
               'Menu Management',
               style: TextStyle(
@@ -53,12 +62,13 @@ class RestaurantSettings extends StatelessWidget {
               ),
             ),
             trailing: const Icon(Iconsax.arrow_right_1, size: 16),
-            hoverColor: DineSwiftColors.softGrey.withOpacity(0.2),
+            hoverColor: DineSwiftColors.softGrey.withAlpha(alpha),
             onTap: () {
               showDialog(
                 context: context,
                 builder: (BuildContext context) {
                   return const Dialog(
+                    backgroundColor: DineSwiftColors.whiteColor,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.all(Radius.circular(10.0)),
                     ),
@@ -88,7 +98,7 @@ class RestaurantSettings extends StatelessWidget {
               ),
             ),
             trailing: const Icon(Iconsax.arrow_right_1, size: 16),
-            hoverColor: DineSwiftColors.softGrey.withOpacity(0.2),
+            hoverColor: DineSwiftColors.softGrey.withAlpha(alpha),
             onTap: () {
               /* Navigate to Table Layout Editor */
             },
@@ -113,7 +123,7 @@ class RestaurantSettings extends StatelessWidget {
               ),
             ),
             trailing: const Icon(Iconsax.arrow_right_1, size: 16),
-            hoverColor: DineSwiftColors.softGrey.withOpacity(0.2),
+            hoverColor: DineSwiftColors.softGrey.withAlpha(alpha),
             onTap: () {
               showDialog(
                 context: context,
@@ -128,6 +138,7 @@ class RestaurantSettings extends StatelessWidget {
               );
             },
           ),
+          const SizedBox(height: 8),
         ],
       ),
     );

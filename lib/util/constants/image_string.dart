@@ -11,5 +11,9 @@ class DineSwiftImages {
   static const String mikeDavis = 'images/customers/mike_davis.jpg';
   static const String emilyWilson = 'images/customers/emily_wilson.jpg';
   static const String sarahJohnson = 'images/waiters/sarah_johnson.jpg';
+
+  // authentication
+  static const String signIn = "assets/images/authentication/signin-image.jpg";
+  static const String signUp = "assets/images/authentication/signup-image.jpg";
   
 }
