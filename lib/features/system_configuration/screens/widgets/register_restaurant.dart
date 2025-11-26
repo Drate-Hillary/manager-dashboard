@@ -1,4 +1,6 @@
+import 'package:dineswift_management/features/system_configuration/models/restaurant_registration.dart';
 import 'package:dineswift_management/util/constants/colors.dart';
+import 'package:dineswift_management/util/constants/text_strings.dart';
 import 'package:dineswift_management/data/supabase_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -6,6 +8,7 @@ import 'dart:convert';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:uuid/uuid.dart';
+import 'package:get_storage/get_storage.dart';
 
 class RestaurantRegistrationForm extends StatefulWidget {
   const RestaurantRegistrationForm({super.key});
@@ -16,61 +19,85 @@ class RestaurantRegistrationForm extends StatefulWidget {
 
 class RestaurantRegistrationFormState extends State<RestaurantRegistrationForm> {
   final formKey = GlobalKey<FormState>();
-  bool _isFetchingLocation = false;
+  bool isFetchingLocation = false;
   final uuid = const Uuid();
 
-  // --- Form Field Controllers ---
-  // Core Details
-  final _nameController = TextEditingController();
-  final _descriptionController = TextEditingController();
-  final _cuisineTypeController = TextEditingController();
-  String? _selectedStatus;
+  final nameController = TextEditingController();
+  final descriptionController = TextEditingController();
+  final cuisineTypeController = TextEditingController();
+  String? selectedStatus;
 
   // Address
-  final _addressStreetController = TextEditingController();
-  final _addressCityController = TextEditingController();
-  final _addressCountryController = TextEditingController();
-  final _addressLatController = TextEditingController();
-  final _addressLngController = TextEditingController();
+  final addressStreetController = TextEditingController();
+  final addressCityController = TextEditingController();
+  final addressCountryController = TextEditingController();
+  final addressLatController = TextEditingController();
+  final addressLngController = TextEditingController();
 
   // Contact
-  final _contactPhoneController = TextEditingController();
-  final _contactEmailController = TextEditingController();
+  final contactPhoneController = TextEditingController();
+  final contactEmailController = TextEditingController();
 
   // Operations
-  final _operationHoursController = TextEditingController();
-  final _deliveryOptionsController = TextEditingController();
-  final _avgDeliveryTimeController = TextEditingController();
+  final operationHoursController = TextEditingController();
+  final deliveryOptionsController = TextEditingController();
+  final avgDeliveryTimeController = TextEditingController();
 
-  // Optional
-  final _paymentMethodsController = TextEditingController();
-  final _socialMediaController = TextEditingController();
 
   @override
   void dispose() {
-    // Dispose all controllers
-    _nameController.dispose();
-    _descriptionController.dispose();
-    _cuisineTypeController.dispose();
-    _addressStreetController.dispose();
-    _addressCityController.dispose();
-    _addressCountryController.dispose();
-    _addressLatController.dispose();
-    _addressLngController.dispose();
-    _contactPhoneController.dispose();
-    _contactEmailController.dispose();
-    _operationHoursController.dispose();
-    _deliveryOptionsController.dispose();
-    _avgDeliveryTimeController.dispose();
-    _paymentMethodsController.dispose();
-    _socialMediaController.dispose();
+    nameController.dispose();
+    descriptionController.dispose();
+    cuisineTypeController.dispose();
+    addressStreetController.dispose();
+    addressCityController.dispose();
+    addressCountryController.dispose();
+    addressLatController.dispose();
+    addressLngController.dispose();
+    contactPhoneController.dispose();
+    contactEmailController.dispose();
+    operationHoursController.dispose();
+    deliveryOptionsController.dispose();
+    avgDeliveryTimeController.dispose();
     super.dispose();
   }
 
-  Future<void> _submitForm() async {
+  Future<void> submitForm() async {
     if (!formKey.currentState!.validate()) {
       Fluttertoast.showToast(
-        msg: 'Please fix the errors in the form.',
+        msg: DineSwiftTextStrings.fixFormErrors,
+        backgroundColor: Colors.red,
+        textColor: Colors.white,
+      );
+      return;
+    }
+
+    final storage = GetStorage();
+    final isSuperuser = storage.read('is_superuser') ?? false;
+    final isActive = storage.read('is_active') ?? false;
+    final userId = storage.read('user_id');
+
+    if (!isSuperuser) {
+      Fluttertoast.showToast(
+        msg: 'Only superusers can register restaurants',
+        backgroundColor: Colors.red,
+        textColor: Colors.white,
+      );
+      return;
+    }
+
+    if (!isActive) {
+      Fluttertoast.showToast(
+        msg: 'Your account is not active',
+        backgroundColor: Colors.red,
+        textColor: Colors.white,
+      );
+      return;
+    }
+
+    if (userId == null) {
+      Fluttertoast.showToast(
+        msg: 'User ID not found. Please logout and login again',
         backgroundColor: Colors.red,
         textColor: Colors.white,
       );
@@ -78,55 +105,48 @@ class RestaurantRegistrationFormState extends State<RestaurantRegistrationForm> 
     }
 
     Fluttertoast.showToast(
-      msg: 'Registering restaurant...',
+      msg: DineSwiftTextStrings.registeringRestaurant,
     );
 
-    final Map<String, dynamic> restaurantData = {
-      'id': uuid.v4(),
-      'name': _nameController.text,
-      'status': _selectedStatus,
-      'average_rating': 0.0,
-      'total_reviews': 0,
-      "created_at": DateTime.now().toIso8601String(),
-      "updated_at": DateTime.now().toIso8601String(),
-      'address': {
-        'street': _addressStreetController.text,
-        'city': _addressCityController.text,
-        'country': _addressCountryController.text,
-        'coordinates': {
-          'lat': double.tryParse(_addressLatController.text) ?? 0.0,
-          'lng': double.tryParse(_addressLngController.text) ?? 0.0,
-        },
-      },
-      'contact_info': {
-        'phone': _contactPhoneController.text,
-        'email': _contactEmailController.text,
-      },
-      'operation_hours': jsonDecode(_operationHoursController.text),
-      if (_descriptionController.text.isNotEmpty)
-        'description': _descriptionController.text,
-      if (_cuisineTypeController.text.isNotEmpty)
-        'cuisine_type': _cuisineTypeController.text,
-      if (_socialMediaController.text.isNotEmpty)
-        'social_media_links': jsonDecode(_socialMediaController.text),
-      if (_deliveryOptionsController.text.isNotEmpty)
-        'delivery_options': jsonDecode(_deliveryOptionsController.text),
-      if (_paymentMethodsController.text.isNotEmpty)
-        'payment_methods_accepted': jsonDecode(_paymentMethodsController.text),
-      if (_avgDeliveryTimeController.text.isNotEmpty)
-        'average_delivery_time': int.tryParse(_avgDeliveryTimeController.text),
-    };
+    // Create restaurant model
+    final restaurant = RestaurantModel(
+      id: uuid.v4(),
+      name: nameController.text,
+      status: selectedStatus,
+      managerId: userId,
+      averageRating: 0.0,
+      totalReviews: 0,
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+      address: RestaurantAddress(
+        street: addressStreetController.text,
+        city: addressCityController.text,
+        country: addressCountryController.text,
+        coordinates: RestaurantCoordinates(
+          lat: double.tryParse(addressLatController.text) ?? 0.0,
+          lng: double.tryParse(addressLngController.text) ?? 0.0,
+        ),
+      ),
+      contactInfo: RestaurantContact(
+        phone: contactPhoneController.text,
+        email: contactEmailController.text,
+      ),
+      operationHours: jsonDecode(operationHoursController.text),
+      description: descriptionController.text.isNotEmpty ? descriptionController.text : null,
+      cuisineType: cuisineTypeController.text.isNotEmpty ? cuisineTypeController.text : null,
+      averageDeliveryTime: avgDeliveryTimeController.text.isNotEmpty ? int.tryParse(avgDeliveryTimeController.text) : null,
+    );
 
     try {
-      await SupabaseService.registerRestaurant(restaurantData);
+      await SupabaseService.registerRestaurant(restaurant.toJson());
       if (mounted) {
         Fluttertoast.showToast(
-          msg: 'Restaurant registered successfully!',
+          msg: DineSwiftTextStrings.restaurantRegistered,
           backgroundColor: Colors.green,
           textColor: Colors.white,
         );
         formKey.currentState!.reset();
-        setState(() => _selectedStatus = null);
+        setState(() => selectedStatus = null);
       }
     } catch (e) {
       if (mounted) {
@@ -139,9 +159,9 @@ class RestaurantRegistrationFormState extends State<RestaurantRegistrationForm> 
     }
   }
 
-  Future<void> _getCurrentLocation() async {
+  Future<void> getCurrentLocation() async {
     setState(() {
-      _isFetchingLocation = true;
+      isFetchingLocation = true;
     });
 
     try {
@@ -149,54 +169,55 @@ class RestaurantRegistrationFormState extends State<RestaurantRegistrationForm> 
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
         if (permission == LocationPermission.denied) {
-          Fluttertoast.showToast(msg: 'Location permissions are denied.');
+          Fluttertoast.showToast(msg: DineSwiftTextStrings.locationPermissionsDenied);
           return;
         }
       }
 
       if (permission == LocationPermission.deniedForever) {
         Fluttertoast.showToast(
-          msg: 'Location permissions are permanently denied, we cannot request permissions.'
+          msg: DineSwiftTextStrings.locationPermissionsPermanentlyDenied
         );
         return;
       }
 
       final Position position = await Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.high);
+        desiredAccuracy: LocationAccuracy.high
+      );
 
       setState(() {
-        _addressLatController.text = position.latitude.toString();
-        _addressLngController.text = position.longitude.toString();
+        addressLatController.text = position.latitude.toString();
+        addressLngController.text = position.longitude.toString();
       });
 
-      Fluttertoast.showToast(msg: 'Location fetched successfully!');
+      Fluttertoast.showToast(msg: DineSwiftTextStrings.locationFetched);
     } catch (e) {
       Fluttertoast.showToast(
-        msg: 'Failed to get location: $e',
+        msg: '${DineSwiftTextStrings.locationFailed}$e',
         backgroundColor: Colors.red,
       );
     } finally {
       if (mounted) {
         setState(() {
-          _isFetchingLocation = false;
+          isFetchingLocation = false;
         });
       }
     }
   }
+
   @override
   Widget build(BuildContext context) {
     return Container(
       width: 600,
       decoration: BoxDecoration(
         color: DineSwiftColors.whiteColor,
-        borderRadius: BorderRadius.circular(12),
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(12),
+      child: SafeArea(
+        
         child: Scaffold(
           appBar: AppBar(
             title: const Text(
-              'Register New Restaurant',
+              DineSwiftTextStrings.registerRestaurantTitle,
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w500,
@@ -213,22 +234,24 @@ class RestaurantRegistrationFormState extends State<RestaurantRegistrationForm> 
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    buildSectionHeader('Core Details'),
+                    buildSectionHeader(DineSwiftTextStrings.coreDetailsHeader),
                     buildTwoColumnLayout(
                       leftChild: TextFormField(
-                        controller: _nameController,
+                        controller: nameController,
                         decoration: InputDecoration(
-                          labelText: 'Restaurant Name',
+                          labelText: DineSwiftTextStrings.restaurantName,
                           labelStyle: const TextStyle(
                             fontWeight: FontWeight.w500,
                             color: DineSwiftColors.blackColor,
                             fontSize: 16,
                           ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.all(Radius.circular(8)),
+                          border: UnderlineInputBorder(
+                            borderSide: BorderSide(
+                              color: DineSwiftColors.darkGrey.withAlpha(20),
+                              width: 2.0,
+                            ),
                           ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.all(Radius.circular(8)),
+                          focusedBorder: UnderlineInputBorder(
                             borderSide: BorderSide(
                               color: DineSwiftColors.infoColor,
                               width: 2.0,
@@ -236,47 +259,51 @@ class RestaurantRegistrationFormState extends State<RestaurantRegistrationForm> 
                           ),
                         ),
                         validator: (value) => value == null || value.isEmpty
-                            ? 'Name is required'
+                            ? DineSwiftTextStrings.nameRequired
                             : null,
                       ),
                       rightChild: TextFormField(
-                        controller: _cuisineTypeController,
-                        decoration: const InputDecoration(
-                          labelText: 'Cuisine Type',
-                          labelStyle: TextStyle(
+                        controller: cuisineTypeController,
+                        decoration: InputDecoration(
+                          labelText: DineSwiftTextStrings.cuisineType,
+                          labelStyle: const TextStyle(
                             fontWeight: FontWeight.w500,
                             color: DineSwiftColors.blackColor,
                             fontSize: 16,
                           ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.all(Radius.circular(8)),
+                          border: const UnderlineInputBorder(
+                            borderSide: BorderSide(
+                              color: DineSwiftColors.darkGrey,
+                              width: 2.0,
+                            ),
                           ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.all(Radius.circular(8)),
+                          focusedBorder: const UnderlineInputBorder(
                             borderSide: BorderSide(
                               color: DineSwiftColors.infoColor,
                               width: 2.0,
                             ),
                           ),
-                          hintText: 'e.g., Italian',
+                          hintText: DineSwiftTextStrings.cuisineTypeHint,
                         ),
                       ),
                     ),
-                    _buildSpacer(),
+                    buildSpacer(),
                     TextFormField(
-                      controller: _descriptionController,
+                      controller: descriptionController,
                       decoration: const InputDecoration(
-                        labelText: 'Description',
+                        labelText: DineSwiftTextStrings.description,
                         labelStyle: TextStyle(
                           fontWeight: FontWeight.w500,
                           color: DineSwiftColors.blackColor,
                           fontSize: 16,
                         ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(8)),
+                        border: UnderlineInputBorder(
+                          borderSide: BorderSide(
+                            color: DineSwiftColors.darkGrey,
+                            width: 2.0,
+                          ),
                         ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(8)),
+                        focusedBorder: UnderlineInputBorder(
                           borderSide: BorderSide(
                             color: DineSwiftColors.infoColor,
                             width: 2.0,
@@ -285,99 +312,107 @@ class RestaurantRegistrationFormState extends State<RestaurantRegistrationForm> 
                       ),
                       maxLines: 2,
                     ),
-                    _buildSpacer(),
+                    buildSpacer(),
 
                     // Address Section
-                    buildSectionHeader('Address'),
+                    buildSectionHeader(DineSwiftTextStrings.addressHeader),
                     buildTwoColumnLayout(
                       leftChild: TextFormField(
-                        controller: _addressStreetController,
+                        controller: addressStreetController,
                         decoration: const InputDecoration(
-                          labelText: 'Street Address',
-                          labelStyle: TextStyle(
-                            fontWeight: FontWeight.w500,
-                            color: DineSwiftColors.blackColor,
-                            fontSize: 16,
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.all(Radius.circular(8)),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.all(Radius.circular(8)),
-                            borderSide: BorderSide(
-                              color: DineSwiftColors.infoColor,
-                              width: 2.0,
-                            ),
-                          ),
-                        ),
-                        validator: (value) => value == null || value.isEmpty ? 'Street is required' : null,
-                      ),
-                      rightChild: TextFormField(
-                        controller: _addressCityController,
-                        decoration: const InputDecoration(
-                          labelText:'City',
+                          labelText: DineSwiftTextStrings.streetAddress,
                           labelStyle: TextStyle(
                             fontWeight: FontWeight.w500,
                             color: DineSwiftColors.blackColor,
                             fontSize: 16,
                           ),
                           border: UnderlineInputBorder(
-                            borderSide: BorderSide()
+                            borderSide: BorderSide(
+                              color: DineSwiftColors.darkGrey,
+                              width: 2.0,
+                            ),
                           ),
                           focusedBorder: UnderlineInputBorder(
-                            borderRadius: BorderRadius.all(Radius.circular(8)),
                             borderSide: BorderSide(
                               color: DineSwiftColors.infoColor,
                               width: 2.0,
                             ),
                           ),
                         ),
-                        validator: (value) => value == null || value.isEmpty ? 'City is required': null,
+                        validator: (value) => value == null || value.isEmpty ? DineSwiftTextStrings.streetRequired : null,
+                      ),
+                      rightChild: TextFormField(
+                        controller: addressCityController,
+                        decoration: const InputDecoration(
+                          labelText: DineSwiftTextStrings.city,
+                          labelStyle: TextStyle(
+                            fontWeight: FontWeight.w500,
+                            color: DineSwiftColors.blackColor,
+                            fontSize: 16,
+                          ),
+                          border: UnderlineInputBorder(
+                            borderSide: BorderSide(
+                              color: DineSwiftColors.darkGrey,
+                              width: 2.0,
+                            ),
+                          ),
+                          focusedBorder: UnderlineInputBorder(
+                            borderSide: BorderSide(
+                              color: DineSwiftColors.infoColor,
+                              width: 2.0,
+                            ),
+                          ),
+                        ),
+                        validator: (value) => value == null || value.isEmpty ? DineSwiftTextStrings.cityRequired : null,
                       ),
                     ),
 
-                    _buildSpacer(),
+                    buildSpacer(),
                     buildTwoColumnLayout(
                       leftChild: TextFormField(
-                        controller: _addressCountryController,
+                        controller: addressCountryController,
                         decoration: const InputDecoration(
-                          labelText: 'Country',
+                          labelText: DineSwiftTextStrings.country,
                           labelStyle: TextStyle(
                             fontWeight: FontWeight.w500,
                             color: DineSwiftColors.blackColor,
                             fontSize: 16,
                           ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.all(Radius.circular(8)),
+                          border: UnderlineInputBorder(
+                            borderSide: BorderSide(
+                              color: DineSwiftColors.darkGrey,
+                              width: 2.0,
+                            ),
                           ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.all(Radius.circular(8)),
+                          focusedBorder: UnderlineInputBorder(
                             borderSide: BorderSide(
                               color: DineSwiftColors.infoColor,
                               width: 2.0,
                             ),
                           ),
                         ),
-                        validator: (value) => value == null || value.isEmpty ? 'Country is required' : null,
+                        validator: (value) => value == null || value.isEmpty ? DineSwiftTextStrings.countryRequired : null,
                       ), 
                       rightChild: Container()
                     ),
-                    _buildSpacer(),
+                    buildSpacer(),
                     buildTwoColumnLayout(
                       leftChild: TextFormField(
-                        controller: _addressLatController,
+                        controller: addressLatController,
                         decoration: const InputDecoration(
-                          labelText: 'Latitude',
+                          labelText: DineSwiftTextStrings.latitude,
                           labelStyle: TextStyle(
                             fontWeight: FontWeight.w500,
                             color: DineSwiftColors.blackColor,
                             fontSize: 16,
                           ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.all(Radius.circular(8)),
+                          border: UnderlineInputBorder(
+                            borderSide: BorderSide(
+                              color: DineSwiftColors.darkGrey,
+                              width: 2.0,
+                            ),
                           ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.all(Radius.circular(8)),
+                          focusedBorder: UnderlineInputBorder(
                             borderSide: BorderSide(
                               color: DineSwiftColors.infoColor,
                               width: 2.0,
@@ -389,23 +424,25 @@ class RestaurantRegistrationFormState extends State<RestaurantRegistrationForm> 
                         ),
                         validator: (value) =>
                             double.tryParse(value ?? '') == null
-                            ? 'Must be a number'
+                            ? DineSwiftTextStrings.mustBeNumber
                             : null,
                       ),
                       rightChild: TextFormField(
-                        controller: _addressLngController,
+                        controller: addressLngController,
                         decoration: const InputDecoration(
-                          labelText: 'Longitude',
+                          labelText: DineSwiftTextStrings.longitude,
                           labelStyle: TextStyle(
                             fontWeight: FontWeight.w500,
                             color: DineSwiftColors.blackColor,
                             fontSize: 16,
                           ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.all(Radius.circular(8)),
+                          border: UnderlineInputBorder(
+                            borderSide: BorderSide(
+                              color: DineSwiftColors.darkGrey,
+                              width: 2.0,
+                            ),
                           ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.all(Radius.circular(8)),
+                          focusedBorder: UnderlineInputBorder(
                             borderSide: BorderSide(
                               color: DineSwiftColors.infoColor,
                               width: 2.0,
@@ -417,24 +454,25 @@ class RestaurantRegistrationFormState extends State<RestaurantRegistrationForm> 
                         ),
                         validator: (value) =>
                             double.tryParse(value ?? '') == null
-                            ? 'Must be a number'
+                            ? DineSwiftTextStrings.mustBeNumber
                             : null,
                       ),
                     ),
-                    _buildSpacer(),
+                    buildSpacer(),
                     Center(
                       child: OutlinedButton.icon(
-                        onPressed: _isFetchingLocation ? null : _getCurrentLocation,
-                        icon: _isFetchingLocation
+                        onPressed: isFetchingLocation ? null : getCurrentLocation,
+                        icon: isFetchingLocation
                             ? const SizedBox(
                                 width: 16,
                                 height: 16,
                                 child: CircularProgressIndicator(strokeWidth: 2),
                               )
                             : const Icon(Icons.my_location),
-                        label: Text(_isFetchingLocation
-                            ? 'Fetching Location...'
-                            : 'Use Current Location'),
+                        label: Text(isFetchingLocation
+                            ? DineSwiftTextStrings.fetchingLocation
+                            : DineSwiftTextStrings.useCurrentLocation
+                        ),
                         style: OutlinedButton.styleFrom(
                           foregroundColor: DineSwiftColors.primaryColor,
                           side: const BorderSide(color: DineSwiftColors.primaryColor),
@@ -443,22 +481,24 @@ class RestaurantRegistrationFormState extends State<RestaurantRegistrationForm> 
                     ),
 
                     // --- Contact Information Section ---
-                    buildSectionHeader('Contact Information'),
+                    buildSectionHeader(DineSwiftTextStrings.contactInfoHeader),
                     buildTwoColumnLayout(
                       leftChild: TextFormField(
-                        controller: _contactPhoneController,
+                        controller: contactPhoneController,
                         decoration: const InputDecoration(
-                          labelText: 'Phone Number',
+                          labelText: DineSwiftTextStrings.phoneNumber,
                           labelStyle: TextStyle(
                             fontWeight: FontWeight.w500,
                             color: DineSwiftColors.blackColor,
                             fontSize: 16,
                           ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.all(Radius.circular(8)),
+                          border: UnderlineInputBorder(
+                            borderSide: BorderSide(
+                              color: DineSwiftColors.darkGrey,
+                              width: 2.0,
+                            ),
                           ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.all(Radius.circular(8)),
+                          focusedBorder: UnderlineInputBorder(
                             borderSide: BorderSide(
                               color: DineSwiftColors.infoColor,
                               width: 2.0,
@@ -467,23 +507,25 @@ class RestaurantRegistrationFormState extends State<RestaurantRegistrationForm> 
                         ),
                         keyboardType: TextInputType.phone,
                         validator: (value) => value == null || value.isEmpty
-                          ? 'Phone is required'
+                          ? DineSwiftTextStrings.phoneRequired
                           : null,
                       ),
                       rightChild: TextFormField(
-                        controller: _contactEmailController,
+                        controller: contactEmailController,
                         decoration: const InputDecoration(
-                          labelText: 'Email Address',
+                          labelText: DineSwiftTextStrings.emailAddress,
                           labelStyle: TextStyle(
                             fontWeight: FontWeight.w500,
                             color: DineSwiftColors.blackColor,
                             fontSize: 16,
                           ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.all(Radius.circular(8)),
+                          border: UnderlineInputBorder(
+                            borderSide: BorderSide(
+                              color: DineSwiftColors.darkGrey,
+                              width: 2.0,
+                            ),
                           ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.all(Radius.circular(8)),
+                          focusedBorder: UnderlineInputBorder(
                             borderSide: BorderSide(
                               color: DineSwiftColors.infoColor,
                               width: 2.0,
@@ -493,70 +535,78 @@ class RestaurantRegistrationFormState extends State<RestaurantRegistrationForm> 
                         keyboardType: TextInputType.emailAddress,
                         validator: (value) {
                           if (value == null || value.isEmpty)
-                            return 'Email is required';
+                            return DineSwiftTextStrings.emailRequired;
                           if (!value.contains('@'))
-                            return 'Enter a valid email';
+                            return DineSwiftTextStrings.validEmail;
                           return null;
                         },
                       ),
                     ),
-                    _buildSpacer(),
+                    buildSpacer(),
 
                     // --- Operations Section ---
-                    buildSectionHeader('Operations'),
+                    buildSectionHeader(DineSwiftTextStrings.operationsHeader),
                     buildTwoColumnLayout(
                       leftChild: DropdownButtonFormField<String>(
-                        value: _selectedStatus,
-                        decoration: const InputDecoration(
-                          labelText: 'Status',
-                          labelStyle: TextStyle(
-                            fontWeight: FontWeight.w500,
-                            color: DineSwiftColors.blackColor,
-                            fontSize: 16,
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.all(Radius.circular(8)),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.all(Radius.circular(8)),
-                            borderSide: BorderSide(
-                              color: DineSwiftColors.infoColor,
+                        isExpanded: true,
+                        value: selectedStatus,
+                        decoration: InputDecoration(
+                          labelText: DineSwiftTextStrings.status,
+                          border: UnderlineInputBorder(
+                            borderSide: const BorderSide(
+                              color: DineSwiftColors.darkGrey,
                               width: 2.0,
                             ),
                           ),
+                          focusedBorder: UnderlineInputBorder(
+                            borderSide: BorderSide(
+                              color: DineSwiftColors.primaryColor,
+                              width: 2.0,
+                            ),
+                          ),
+                          filled: true,
+                          fillColor: Colors.grey[50],
                         ),
+                        dropdownColor: Colors.grey[50],
+                        borderRadius: BorderRadius.circular(8.0),
                         items: ['active', 'inactive', 'suspended']
-                            .map(
-                              (status) => DropdownMenuItem(
-                                value: status,
-                                child: Text(
-                                  status[0].toUpperCase() + status.substring(1),
+                          .map(
+                            (status) => DropdownMenuItem(
+                              value: status,
+                              child: Text(
+                                status[0].toUpperCase() + status.substring(1),
+                                style: TextStyle(
+                                  color: DineSwiftColors.blackColor,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
                                 ),
                               ),
-                            )
-                            .toList(),
+                            ),
+                          )
+                          .toList(),
                         onChanged: (value) {
                           setState(() {
-                            _selectedStatus = value;
+                            selectedStatus = value;
                           });
                         },
-                        validator: (value) =>
-                            value == null ? 'Status is required' : null,
+                        validator: (value) => value == null ? DineSwiftTextStrings.statusRequired : null,
                       ),
                       rightChild: TextFormField(
-                        controller: _avgDeliveryTimeController,
+                        controller: avgDeliveryTimeController,
                         decoration: const InputDecoration(
-                          labelText: 'Avg. Delivery Time (mins)',
+                          labelText: DineSwiftTextStrings.avgDeliveryTime,
                           labelStyle: TextStyle(
                             fontWeight: FontWeight.w500,
                             color: DineSwiftColors.blackColor,
                             fontSize: 16,
                           ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.all(Radius.circular(8)),
+                          border: UnderlineInputBorder(
+                            borderSide: BorderSide(
+                              color: DineSwiftColors.darkGrey,
+                              width: 2.0,
+                            ),
                           ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.all(Radius.circular(8)),
+                          focusedBorder: UnderlineInputBorder(
                             borderSide: BorderSide(
                               color: DineSwiftColors.infoColor,
                               width: 2.0,
@@ -569,28 +619,30 @@ class RestaurantRegistrationFormState extends State<RestaurantRegistrationForm> 
                         ],
                       ),
                     ),
-                    _buildSpacer(),
+                    buildSpacer(),
                     TextFormField(
-                      controller: _operationHoursController,
-                      decoration: const InputDecoration(
-                        labelText: 'Operation Hours',
-                        labelStyle: TextStyle(
+                      controller: operationHoursController,
+                      decoration: InputDecoration(
+                        labelText: DineSwiftTextStrings.operationHours,
+                        labelStyle: const TextStyle(
                           fontWeight: FontWeight.w500,
                           color: DineSwiftColors.blackColor,
                           fontSize: 16,
                         ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(8)),
+                        border: const UnderlineInputBorder(
+                          borderSide: BorderSide(
+                            color: DineSwiftColors.darkGrey,
+                            width: 2.0,
+                          ),
                         ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(8)),
+                        focusedBorder: const UnderlineInputBorder(
                           borderSide: BorderSide(
                             color: DineSwiftColors.infoColor,
                             width: 2.0,
                           ),
                         ),
-                        hintText: '{"Mon": "9-5", "Tue": "9-5"}',
-                        hintStyle: TextStyle(
+                        hintText: DineSwiftTextStrings.operationHoursHint,
+                        hintStyle: const TextStyle(
                           color: DineSwiftColors.darkGrey,
                           fontSize: 14,
                         ),
@@ -598,118 +650,60 @@ class RestaurantRegistrationFormState extends State<RestaurantRegistrationForm> 
                       maxLines: 2,
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Hours are required';
+                          return DineSwiftTextStrings.hoursRequired;
                         }
                         try {
                           jsonDecode(value);
                           return null;
                         } catch (e) {
-                          return 'Invalid JSON format';
+                          return DineSwiftTextStrings.invalidJsonFormat;
                         }
                       },
                     ),
-                    _buildSpacer(),
+                    buildSpacer(),
                     TextFormField(
-                      controller: _deliveryOptionsController,
-                      decoration: const InputDecoration(
-                        labelText: 'Delivery Options',
-                        labelStyle: TextStyle(
+                      controller: deliveryOptionsController,
+                      decoration: InputDecoration(
+                        labelText: DineSwiftTextStrings.deliveryOptions,
+                        labelStyle: const TextStyle(
                           fontWeight: FontWeight.w500,
                           color: DineSwiftColors.blackColor,
                           fontSize: 16,
                         ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(8)),
+                        border: const UnderlineInputBorder(
+                          borderSide: BorderSide(
+                            color: DineSwiftColors.darkGrey,
+                            width: 2.0,
+                          ),
                         ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(8)),
+                        focusedBorder: const UnderlineInputBorder(
                           borderSide: BorderSide(
                             color: DineSwiftColors.infoColor,
                             width: 2.0,
                           ),
                         ),
-                        hintText: '{"fee": 5.0, "min_order": 20.0}',
-                        hintStyle: TextStyle(
+                        hintText: DineSwiftTextStrings.deliveryOptionsHint,
+                        hintStyle: const TextStyle(
                           color: DineSwiftColors.darkGrey,
                           fontSize: 14,
                         ),
                       ),
                       maxLines: 2,
                     ),
-                    _buildSpacer(),
-
-                    // --- Additional Information Section ---
-                    buildSectionHeader('Additional Information'),
-                    buildTwoColumnLayout(
-                      leftChild: TextFormField(
-                        controller: _paymentMethodsController,
-                        decoration: const InputDecoration(
-                          labelText: 'Payment Methods',
-                          labelStyle: TextStyle(
-                            fontWeight: FontWeight.w500,
-                            color: DineSwiftColors.blackColor,
-                            fontSize: 16,
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.all(Radius.circular(8)),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.all(Radius.circular(8)),
-                            borderSide: BorderSide(
-                              color: DineSwiftColors.infoColor,
-                              width: 2.0,
-                            ),
-                          ),
-                          hintText: '["card", "cash", "mobile_money"]',
-                          hintStyle: TextStyle(
-                            color: DineSwiftColors.darkGrey,
-                            fontSize: 14,
-                          ),
-                        ),
-                        maxLines: 2,
-                      ),
-                      rightChild: TextFormField(
-                        controller: _socialMediaController,
-                        decoration: const InputDecoration(
-                          labelText: 'Social Media Links',
-                          labelStyle: TextStyle(
-                            fontWeight: FontWeight.w500,
-                            color: DineSwiftColors.blackColor,
-                            fontSize: 16,
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.all(Radius.circular(8)),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.all(Radius.circular(8)),
-                            borderSide: BorderSide(
-                              color: DineSwiftColors.infoColor,
-                              width: 2.0,
-                            ),
-                          ),
-                          hintText: '{"twitter": "...", "facebook": "..."}',
-                          hintStyle: TextStyle(
-                            color: DineSwiftColors.darkGrey,
-                            fontSize: 14,
-                          ),
-                        ),
-                        maxLines: 2,
-                      ),
-                    ),
-                    _buildSpacer(height: 32),
+                    buildSpacer(height: 32),
 
                     // --- Submit Button ---
                     Center(
                       child: SizedBox(
                         width: 300,
                         child: ElevatedButton(
-                          onPressed: _submitForm,
+                          onPressed: submitForm,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: DineSwiftColors.primaryColor,
                             padding: const EdgeInsets.symmetric(vertical: 16),
                           ),
                           child: const Text(
-                            'Register Restaurant',
+                            DineSwiftTextStrings.registerRestaurantButton,
                             style: TextStyle(
                               color: DineSwiftColors.whiteColor,
                               fontSize: 16,
@@ -767,7 +761,7 @@ class RestaurantRegistrationFormState extends State<RestaurantRegistrationForm> 
     );
   }
 
-  Widget _buildSpacer({double height = 16}) {
+  Widget buildSpacer({double height = 10}) {
     return SizedBox(height: height);
   }
 }

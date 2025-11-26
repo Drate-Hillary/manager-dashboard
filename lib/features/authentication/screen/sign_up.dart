@@ -71,6 +71,7 @@ class SignUpContentState extends State<SignUpContent> {
 
       if (user != null) {
         final storage = GetStorage();
+        await storage.write('user_id', user['id']);
         await storage.write('user_name', user['username']);
         await storage.write('email', user['email']);
         await storage.write('is_superuser', user['is_superuser']);

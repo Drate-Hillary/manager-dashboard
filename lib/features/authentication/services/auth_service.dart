@@ -19,7 +19,7 @@ class AuthService {
       
       final response = await SupabaseService.supabase
           .from('users')
-          .select('username, email, is_superuser, is_active')
+          .select('id, username, email, is_superuser, is_active')
           .eq('email', email)
           .eq('password', hashedPassword)
           .maybeSingle();
@@ -60,7 +60,7 @@ class AuthService {
       final response = await SupabaseService.supabase
         .from('users')
         .insert(userData)
-        .select('username, email, is_superuser, is_active')
+        .select('id, username, email, is_superuser, is_active')
         .single();
 
       return response;

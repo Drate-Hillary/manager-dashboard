@@ -717,7 +717,7 @@ class MenuItemsList extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 IconButton(
-                  hoverColor: DineSwiftColors.infoColor.withAlpha(beta),
+                  hoverColor: DineSwiftColors.infoColor.withAlpha(alpha),
                   icon: const Icon(
                     Iconsax.edit,
                     color: DineSwiftColors.infoColor,

@@ -1,4 +1,5 @@
 import 'package:dineswift_management/features/authentication/screen/sign_up.dart';
+import 'package:dineswift_management/features/authentication/screen/widgets/forgot_password.dart';
 import 'package:dineswift_management/features/authentication/services/auth_service.dart';
 import 'package:dineswift_management/features/dashboard/screens/dashboard.dart';
 import 'package:dineswift_management/util/constants/colors.dart';
@@ -51,6 +52,7 @@ class LoginScreenContentState extends State<LoginScreenContent> {
 
       if (user != null) {
         final storage = GetStorage();
+        await storage.write('user_id', user['id']);
         await storage.write('user_name', user['username']);
         await storage.write('email', user['email']);
         await storage.write('is_superuser', user['is_superuser']);
@@ -189,9 +191,9 @@ class LoginScreenContentState extends State<LoginScreenContent> {
 
                         Align(
                           alignment: Alignment.centerRight,
-                          child: GestureDetector(
-                            onTap: () {
-                              // forget password screen
+                          child: TextButton(
+                            onPressed: () {
+                              Get.to(()=> ForgotPasswordScreen());
                             },
                             child: const Text(
                               DineSwiftTextStrings.forgotPassword,

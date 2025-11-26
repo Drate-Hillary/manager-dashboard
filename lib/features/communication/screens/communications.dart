@@ -77,14 +77,14 @@ class StaffPerformance {
 
 // --- Main Customer Communications Screen ---
 
-class CustomerCommunication extends StatefulWidget {
-  const CustomerCommunication({super.key});
+class Communications extends StatefulWidget {
+  const Communications({super.key});
 
   @override
-  State<CustomerCommunication> createState() => _CustomerCommunicationsState();
+  State<Communications> createState() => CommunicationsState();
 }
 
-class _CustomerCommunicationsState extends State<CustomerCommunication>
+class CommunicationsState extends State<Communications>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final List<String> _tabTitles = [

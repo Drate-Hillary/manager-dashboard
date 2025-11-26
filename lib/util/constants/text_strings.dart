@@ -108,8 +108,7 @@ class DineSwiftTextStrings {
   // Validation Messages
   static const String pleaseEnterTableNumber = 'Please enter a table number';
   static const String pleaseEnterCapacity = 'Please enter table capacity';
-  static const String pleaseEnterValidCapacity =
-      'Please enter a valid capacity';
+  static const String pleaseEnterValidCapacity = 'Please enter a valid capacity';
 
   // QR Code Display
   static const String scanToAccess = 'Scan to Access ';
@@ -139,4 +138,126 @@ class DineSwiftTextStrings {
   static const String profile = 'Profile';
   static const String logout = 'Logout';
   static const String changePassword = 'Change Password';
+
+  // forgot password screen text
+  static const String forgotPasswordTitle = "Forgot Password?";
+  static const String forgotPasswordSubTitle = "Enter the Employee ID or email associated with your account to reset your password.";
+  static const String employeeIdOrEmail = "Employee ID or Email Address";
+  static const String employeeIdOrEmailHint = "Enter your employee ID or email address";
+  static const String continueButton = "Continue";
+  static const String backToLogin = "Back to Login";
+
+
+  // AddMenu Screen
+  static const String addNewMenu = 'Add New Menu';
+  static const String editMenu = 'Edit: ';
+  static const String addNewItem = 'Add New Item';
+  static const String menuDetails = 'Menu Details';
+  static const String menuImage = 'Menu Image';
+  static const String tapToAddMenuImage = 'Tap to add menu image';
+  static const String menuName = 'Menu Name';
+  static const String description = 'Description';
+  static const String menuIsActive = 'Menu is Active';
+  static const String menuActiveDescription = 'If active, the menu will be visible to customers.';
+  static const String menuItems = 'Menu Items';
+  static const String noItemsAddedYet = 'No items added yet';
+  static const String tapToAddFirstItem = 'Tap the + button to add your first item';
+  static const String saveItem = 'Save Item';
+  static const String savingMenu = 'Saving menu...';
+  static const String menuSavedSuccessfully = 'Menu saved successfully!';
+  static const String error = 'Error: ';
+
+  // MenuItemEditorModal
+  static const String editItem = 'Edit Item';
+  static const String addNewItemModal = 'Add New Item';
+  static const String itemImage = 'Item Image';
+  static const String addPhoto = 'Add Photo';
+  static const String itemName = 'Item Name';
+  static const String itemDescription = 'Item Description';
+  static const String price = 'Price';
+  static const String prepTime = 'Prep Time';
+  static const String minutes = 'min';
+  static const String department = 'Department';
+  static const String isAvailable = 'Is Available';
+  static const String requiredField = 'Required';
+
+  // Image Picker
+  static const String chooseImageSource = 'Choose Image Source';
+  static const String gallery = 'Gallery';
+  static const String camera = 'Camera';
+
+  // Delete Confirmation
+  static const String deleteItem = 'Delete Item';
+  static const String deleteConfirmation = 'Are you sure you want to delete this menu item?';
+  static const String cancel = 'Cancel';
+  static const String delete = 'Delete';
+
+
+  // Restaurant Registration
+  // App Bar
+  static const String registerRestaurantTitle = 'Register New Restaurant';
+
+  // Core Details Section
+  static const String coreDetailsHeader = 'Core Details';
+  static const String restaurantName = 'Restaurant Name';
+  static const String cuisineType = 'Cuisine Type';
+  static const String cuisineTypeHint = 'e.g. Italian';
+
+  // Address Section
+  static const String addressHeader = 'Address';
+  static const String streetAddress = 'Street Address';
+  static const String city = 'City';
+  static const String country = 'Country';
+  static const String latitude = 'Latitude';
+  static const String longitude = 'Longitude';
+  static const String useCurrentLocation = 'Use Current Location';
+  static const String fetchingLocation = 'Fetching Location...';
+
+  // Contact Information Section
+  static const String contactInfoHeader = 'Contact Information';
+  static const String phoneNumber = 'Phone Number';
+  static const String emailAddress = 'Email Address';
+
+  // Operations Section
+  static const String operationsHeader = 'Operations';
+  static const String status = 'Status';
+  static const String avgDeliveryTime = 'Avg. Delivery Time (mins)';
+  static const String operationHours = 'Operation Hours';
+  static const String operationHoursHint = '{"Mon": "9-5", "Tue": "9-5"}';
+  static const String deliveryOptions = 'Delivery Options';
+  static const String deliveryOptionsHint = '{"fee": 5.0, "min_order": 20.0}';
+
+  // Additional Information Section
+  static const String additionalInfoHeader = 'Additional Information';
+  static const String paymentMethods = 'Payment Methods';
+  static const String paymentMethodsHint = '["card", "cash", "mobile_money"]';
+  static const String socialMediaLinks = 'Social Media Links';
+  static const String socialMediaLinksHint = '{"twitter": "...", "facebook": "..."}';
+
+  // Buttons
+  static const String registerRestaurantButton = 'Register Restaurant';
+
+  // Validation Messages
+  static const String nameRequired = 'Name is required';
+  static const String streetRequired = 'Street is required';
+  static const String cityRequired = 'City is required';
+  static const String countryRequired = 'Country is required';
+  static const String mustBeNumber = 'Must be a number';
+  static const String phoneRequired = 'Phone is required';
+  static const String emailRequired = 'Email is required';
+  static const String validEmail = 'Enter a valid email';
+  static const String statusRequired = 'Status is required';
+  static const String hoursRequired = 'Hours are required';
+  static const String invalidJsonFormat = 'Invalid JSON format';
+
+  // Toast Messages
+  static const String fixFormErrors = 'Please fix the errors in the form.';
+  static const String registeringRestaurant = 'Registering restaurant...';
+  static const String restaurantRegistered = 'Restaurant registered successfully!';
+  static const String locationPermissionsDenied = 'Location permissions are denied.';
+  static const String locationPermissionsPermanentlyDenied = 'Location permissions are permanently denied, we cannot request permissions.';
+  static const String locationFetched = 'Location fetched successfully!';
+  static const String locationFailed = 'Failed to get location: ';
+
 }
+
